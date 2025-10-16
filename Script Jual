@@ -3,7 +3,7 @@
 -- Bisa digeser, minimize, dan ada key UserId manual + notifikasi sukses
 
 -- ====== USER ID KEY ======
-local allowedUserId = "" -- isi UserId kamu di sini, contoh: "123456789"
+local allowedUserId = "9570318039" -- isi UserId kamu di sini, contoh: "123456789"
 
 -- ====== CEK USER ======
 local player = game.Players.LocalPlayer
