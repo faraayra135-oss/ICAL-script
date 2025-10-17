@@ -1,21 +1,81 @@
--- Script Ical Ganteng v3 (Plus "Penjarakan Semua")
+-- Script Ical Ganteng 
+local openingText = "Script ini dibuat oleh Ical yang paling ganteng\n\nTujuan: sebagai hiburan — bukan untuk merusuh.\nTetap jaga persaudaraan. Salam cinta mu, Ical 💖"
+local openingDuration = 10 
+local fadeTime = 0.6      
 
--- ====== USER ID KEY ======
-local allowedUserId = "9440226544" 
+pcall(function()
+	local overlayGui = Instance.new("ScreenGui")
+	overlayGui.Name = "IcalOpeningOverlay"
+	overlayGui.ResetOnSpawn = false
+	overlayGui.IgnoreGuiInset = true
+	overlayGui.Parent = game.CoreGui
 
--- ====== LOADSTRING URL (Penjarakan Semua) ======
+	local bg = Instance.new("Frame")
+	bg.Name = "BG"
+	bg.Size = UDim2.new(1,0,1,0)
+	bg.Position = UDim2.new(0,0,0,0)
+	bg.BackgroundColor3 = Color3.fromRGB(8,8,8)
+	bg.BackgroundTransparency = 0.12
+	bg.Parent = overlayGui
+
+	local label = Instance.new("TextLabel")
+	label.Name = "OpeningLabel"
+	label.Parent = bg
+	label.AnchorPoint = Vector2.new(0.5,0.5)
+	label.Position = UDim2.new(0.5, 0, 0.5, 0)
+	label.Size = UDim2.new(0.9, 0, 0.7, 0)
+	label.BackgroundTransparency = 1
+	label.Text = openingText
+	label.Font = Enum.Font.GothamBlack
+	label.TextSize = 64
+	label.TextColor3 = Color3.fromRGB(255, 240, 240)
+	label.TextWrapped = true
+	label.TextScaled = true
+	label.TextStrokeTransparency = 0.3
+	label.TextStrokeColor3 = Color3.fromRGB(30,30,30)
+	label.TextYAlignment = Enum.TextYAlignment.Center
+	label.TextXAlignment = Enum.TextXAlignment.Center
+
+	local credit = Instance.new("TextLabel")
+	credit.Parent = bg
+	credit.AnchorPoint = Vector2.new(0.5,1)
+	credit.Position = UDim2.new(0.5, 0, 0.98, 0)
+	credit.Size = UDim2.new(0.95, 0, 0.05, 0)
+	credit.BackgroundTransparency = 1
+	credit.Text = "Script by Ical — main dengan baik ❤️"
+	credit.Font = Enum.Font.GothamMedium
+	credit.TextSize = 22
+	credit.TextScaled = true
+	credit.TextColor3 = Color3.fromRGB(255, 200, 210)
+	credit.TextWrapped = true
+	credit.TextStrokeTransparency = 0.8
+	credit.TextXAlignment = Enum.TextXAlignment.Center
+	credit.TextYAlignment = Enum.TextYAlignment.Center
+
+	local TweenService = game:GetService("TweenService")
+	delay(openingDuration, function()
+		local tweenInfo = TweenInfo.new(fadeTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+		local t1 = TweenService:Create(bg, tweenInfo, {BackgroundTransparency = 1})
+		local t2 = TweenService:Create(label, tweenInfo, {TextTransparency = 1, TextStrokeTransparency = 1})
+		local t3 = TweenService:Create(credit, tweenInfo, {TextTransparency = 1, TextStrokeTransparency = 1})
+		t1:Play(); t2:Play(); t3:Play()
+		t1.Completed:Wait()
+		pcall(function() overlayGui:Destroy() end)
+	end)
+end)
+
+local allowedUserId = "9440226544"  
 local JailAllURL = "https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Jail%20all"
--- NOTE: gunakan URL yang valid/raw jika perlu: contoh raw.githubusercontent.com/username/repo/main/filename.lua
-
--- ====== CEK USER ======
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 if allowedUserId ~= "" and tostring(player.UserId) ~= tostring(allowedUserId) then
-	game.StarterGui:SetCore("SendNotification", {
-		Title = "Akses Ditolak",
-		Text = "UserId tidak cocok!",
-		Duration = 5
-	})
+	pcall(function()
+		game.StarterGui:SetCore("SendNotification", {
+			Title = "Akses Ditolak",
+			Text = "UserId tidak cocok!",
+			Duration = 5
+		})
+	end)
 	return
 end
 
@@ -125,15 +185,13 @@ MinimizeButton.MouseButton1Click:Connect(function()
 	for _, obj in ipairs(Frame:GetChildren()) do
 		if obj:IsA("TextButton") and obj ~= MinimizeButton and obj ~= CloseButton then
 			obj.Visible = not minimized
-		elseif obj:IsA("TextLabel") and obj ~= Title then
-			-- nothing
 		end
 	end
 	Frame.Size = minimized and UDim2.new(0, 320, 0, 40) or UDim2.new(0, 320, 0, 320)
 end)
 
 CloseButton.MouseButton1Click:Connect(function()
-	ScreenGui:Destroy()
+	pcall(function() ScreenGui:Destroy() end)
 end)
 
 -- ====== HELPERS ======
@@ -180,7 +238,6 @@ Button1.MouseButton1Click:Connect(function()
 		notify("Berhasil", "Polisi telah dipindahkan ke StarterPack.")
 	else
 		notify("Gagal", tostring(err))
-		warn("PenjarakanPolisi error:", err)
 	end
 end)
 
@@ -190,7 +247,6 @@ Button2.MouseButton1Click:Connect(function()
 		notify("Berhasil", "Inmate telah dipindahkan ke StarterPack.")
 	else
 		notify("Gagal", tostring(err))
-		warn("PenjarakanInmate error:", err)
 	end
 end)
 
@@ -200,7 +256,6 @@ Button3.MouseButton1Click:Connect(function()
 		notify("Berhasil", "Polisi dikembalikan ke Teams.")
 	else
 		notify("Gagal", tostring(err))
-		warn("KembalikanPolisi error:", err)
 	end
 end)
 
@@ -210,21 +265,15 @@ Button4.MouseButton1Click:Connect(function()
 		notify("Berhasil", "Inmate dikembalikan ke Teams.")
 	else
 		notify("Gagal", tostring(err))
-		warn("KembalikanInmate error:", err)
 	end
 end)
 
--- Penjarakan Semua: jalankan loadstring dari JailAllURL
 Button5.MouseButton1Click:Connect(function()
 	local ok, err = pcall(function()
 		local raw = game:HttpGet(JailAllURL)
 		local f = loadstring(raw)
 		if type(f) == "function" then
-			local result = f()
-			-- if returned function, call it
-			if type(result) == "function" then
-				result()
-			end
+			f()
 		else
 			error("Loadstring tidak menghasilkan fungsi.")
 		end
@@ -232,10 +281,8 @@ Button5.MouseButton1Click:Connect(function()
 	if ok then
 		notify("Berhasil", "Perintah 'Penjarakan Semua' dijalankan.")
 	else
-		notify("Gagal menjalankan Penjarakan Semua (cek console).")
-		warn("PenjarakanSemua error:", err)
+		notify("Gagal menjalankan Penjarakan Semua.")
 	end
 end)
 
--- ready
-notify("Ready", "GUI siap. Tombol 'Penjarakan Semua' akan memanggil URL yang diberikan.")
+notify("Ready", "GUI siap digunakan! ❤️")
