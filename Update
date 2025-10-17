@@ -1,7 +1,7 @@
 -- Script Ical Ganteng 
 local openingText = "Script ini dibuat oleh Ical yang paling ganteng\n\nTujuan: sebagai hiburan — bukan untuk merusuh.\nTetap jaga persaudaraan. Salam cinta mu, Ical 💖"
-local openingDuration = 6 -- detik pesan tampil sebelum fade out
-local fadeTime = 0.6      -- detik untuk fade out
+local openingDuration = 10 
+local fadeTime = 0.6      
 
 pcall(function()
 	local overlayGui = Instance.new("ScreenGui")
