@@ -1,0 +1,223 @@
+-- Script Ical Ganteng
+local openingText = "Script ini dibuat oleh Ical yang paling ganteng\n\nTujuan: sebagai hiburan — bukan untuk merusuh.\nTetap jaga persaudaraan. Salam cinta mu, Ical 💖"
+local openingDuration = 10
+local fadeTime = 0.6
+
+pcall(function()
+	local overlayGui = Instance.new("ScreenGui")
+	overlayGui.Name = "IcalOpeningOverlay"
+	overlayGui.ResetOnSpawn = false
+	overlayGui.IgnoreGuiInset = true
+	overlayGui.Parent = game.CoreGui
+
+	local bg = Instance.new("Frame")
+	bg.Name = "BG"
+	bg.Size = UDim2.new(1,0,1,0)
+	bg.Position = UDim2.new(0,0,0,0)
+	bg.BackgroundColor3 = Color3.fromRGB(8,8,8)
+	bg.BackgroundTransparency = 0.12
+	bg.Parent = overlayGui
+
+	local label = Instance.new("TextLabel")
+	label.Name = "OpeningLabel"
+	label.Parent = bg
+	label.AnchorPoint = Vector2.new(0.5,0.5)
+	label.Position = UDim2.new(0.5, 0, 0.5, 0)
+	label.Size = UDim2.new(0.9, 0, 0.7, 0)
+	label.BackgroundTransparency = 1
+	label.Text = openingText
+	label.Font = Enum.Font.GothamBlack
+	label.TextSize = 64
+	label.TextColor3 = Color3.fromRGB(255, 240, 240)
+	label.TextWrapped = true
+	label.TextScaled = true
+	label.TextStrokeTransparency = 0.3
+	label.TextStrokeColor3 = Color3.fromRGB(30,30,30)
+	label.TextYAlignment = Enum.TextYAlignment.Center
+	label.TextXAlignment = Enum.TextXAlignment.Center
+
+	local credit = Instance.new("TextLabel")
+	credit.Parent = bg
+	credit.AnchorPoint = Vector2.new(0.5,1)
+	credit.Position = UDim2.new(0.5, 0, 0.98, 0)
+	credit.Size = UDim2.new(0.95, 0, 0.05, 0)
+	credit.BackgroundTransparency = 1
+	credit.Text = "Script by Ical — main dengan baik ❤️"
+	credit.Font = Enum.Font.GothamMedium
+	credit.TextSize = 22
+	credit.TextScaled = true
+	credit.TextColor3 = Color3.fromRGB(255, 200, 210)
+	credit.TextWrapped = true
+	credit.TextStrokeTransparency = 0.8
+	credit.TextXAlignment = Enum.TextXAlignment.Center
+	credit.TextYAlignment = Enum.TextYAlignment.Center
+
+	local TweenService = game:GetService("TweenService")
+	delay(openingDuration, function()
+		local tweenInfo = TweenInfo.new(fadeTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+		local t1 = TweenService:Create(bg, tweenInfo, {BackgroundTransparency = 1})
+		local t2 = TweenService:Create(label, tweenInfo, {TextTransparency = 1, TextStrokeTransparency = 1})
+		local t3 = TweenService:Create(credit, tweenInfo, {TextTransparency = 1, TextStrokeTransparency = 1})
+		t1:Play(); t2:Play(); t3:Play()
+		t1.Completed:Wait()
+		pcall(function() overlayGui:Destroy() end)
+	end)
+end)
+
+local allowedUserId = "8941905502"
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+if allowedUserId ~= "" and tostring(player.UserId) ~= tostring(allowedUserId) then
+	pcall(function()
+		game.StarterGui:SetCore("SendNotification", {
+			Title = "Akses Ditolak",
+			Text = "UserId tidak cocok!",
+			Duration = 5
+		})
+	end)
+	return
+end
+
+-- ====== GUI SETUP (2 tombol) ======
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "IcalGanteng_GUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game.CoreGui
+
+local Frame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local MinimizeButton = Instance.new("TextButton")
+local CloseButton = Instance.new("TextButton")
+local Btn_JailPolice = Instance.new("TextButton")
+local Btn_ReturnPolice = Instance.new("TextButton")
+
+Frame.Parent = ScreenGui
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame.Position = UDim2.new(0.3, 0, 0.3, 0)
+Frame.Size = UDim2.new(0, 320, 0, 200)
+Frame.Active = true
+Frame.Draggable = true
+Frame.BorderSizePixel = 0
+Frame.BackgroundTransparency = 0.05
+
+Title.Parent = Frame
+Title.Text = "Script Ical Ganteng v3 (Lite)"
+Title.Size = UDim2.new(1, -80, 0, 40)
+Title.Position = UDim2.new(0, 8, 0, 0)
+Title.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 18
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+MinimizeButton.Parent = Frame
+MinimizeButton.Text = "-"
+MinimizeButton.Size = UDim2.new(0, 36, 0, 36)
+MinimizeButton.Position = UDim2.new(1, -80, 0, 0)
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.Font = Enum.Font.SourceSansBold
+MinimizeButton.TextSize = 22
+
+CloseButton.Parent = Frame
+CloseButton.Text = "X"
+CloseButton.Size = UDim2.new(0, 36, 0, 36)
+CloseButton.Position = UDim2.new(1, -40, 0, 0)
+CloseButton.BackgroundColor3 = Color3.fromRGB(90, 70, 70)
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.Font = Enum.Font.SourceSansBold
+CloseButton.TextSize = 18
+
+-- Jail Police button
+Btn_JailPolice.Parent = Frame
+Btn_JailPolice.Text = "Penjarakan Polisi"
+Btn_JailPolice.Position = UDim2.new(0, 10, 0, 56)
+Btn_JailPolice.Size = UDim2.new(0, 300, 0, 48)
+Btn_JailPolice.BackgroundColor3 = Color3.fromRGB(60, 100, 200)
+Btn_JailPolice.TextColor3 = Color3.fromRGB(255, 255, 255)
+Btn_JailPolice.Font = Enum.Font.SourceSansBold
+Btn_JailPolice.TextSize = 18
+
+-- Return Police button
+Btn_ReturnPolice.Parent = Frame
+Btn_ReturnPolice.Text = "Kembalikan Polisi"
+Btn_ReturnPolice.Position = UDim2.new(0, 10, 0, 116)
+Btn_ReturnPolice.Size = UDim2.new(0, 300, 0, 48)
+Btn_ReturnPolice.BackgroundColor3 = Color3.fromRGB(80, 200, 120)
+Btn_ReturnPolice.TextColor3 = Color3.fromRGB(255, 255, 255)
+Btn_ReturnPolice.Font = Enum.Font.SourceSansBold
+Btn_ReturnPolice.TextSize = 18
+
+-- ====== MINIMIZE / CLOSE ======
+local minimized = false
+MinimizeButton.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	for _, obj in ipairs(Frame:GetChildren()) do
+		if obj:IsA("TextButton") and obj ~= MinimizeButton and obj ~= CloseButton then
+			obj.Visible = not minimized
+		end
+	end
+	Frame.Size = minimized and UDim2.new(0, 320, 0, 40) or UDim2.new(0, 320, 0, 200)
+end)
+
+CloseButton.MouseButton1Click:Connect(function()
+	pcall(function() ScreenGui:Destroy() end)
+end)
+
+-- ====== HELPERS ======
+local function notify(title, msg)
+	pcall(function()
+		game.StarterGui:SetCore("SendNotification", {
+			Title = title,
+			Text = msg,
+			Duration = 4
+		})
+	end)
+end
+
+local function safeMoveTeamToStarterPack(name)
+	return pcall(function()
+		local Teams = game:GetService("Teams")
+		local StarterPack = game:GetService("StarterPack")
+		if not Teams or not StarterPack then error("Services missing") end
+		if Teams:FindFirstChild(name) then
+			Teams[name].Parent = StarterPack
+		else
+			error("Team '"..tostring(name).."' not found")
+		end
+	end)
+end
+
+local function safeMoveStarterToTeams(name)
+	return pcall(function()
+		local Teams = game:GetService("Teams")
+		local StarterPack = game:GetService("StarterPack")
+		if not Teams or not StarterPack then error("Services missing") end
+		if StarterPack:FindFirstChild(name) then
+			StarterPack[name].Parent = Teams
+		else
+			error("StarterPack item '"..tostring(name).."' not found")
+		end
+	end)
+end
+
+-- ====== BUTTON ACTIONS ======
+Btn_JailPolice.MouseButton1Click:Connect(function()
+	local ok, err = safeMoveTeamToStarterPack("Police")
+	if ok then
+		notify("Berhasil", "Polisi telah dipindahkan ke StarterPack.")
+	else
+		notify("Gagal", tostring(err))
+	end
+end)
+
+Btn_ReturnPolice.MouseButton1Click:Connect(function()
+	local ok, err = safeMoveStarterToTeams("Police")
+	if ok then
+		notify("Berhasil", "Polisi dikembalikan ke Teams.")
+	else
+		notify("Gagal", tostring(err))
+	end
+end)
+
+notify("Ready", "GUI siap digunakan! ❤️")
