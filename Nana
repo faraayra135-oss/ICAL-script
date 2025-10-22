@@ -65,20 +65,35 @@ pcall(function()
 end)
 
 local JailAllURL = "https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Jail%20all"
-local allowedUserId = "9454449129","9440226544","9179120930"
+local allowedUserIds = {
+    ["9454449129"] = true,  
+    ["9440226544"] = true,  
+    ["9179120930"] = true,  
+    ["1234567890"] = true,  
+}
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
-if allowedUserId ~= "" and tostring(player.UserId) ~= tostring(allowedUserId) then
+
+-- Cek apakah user terdaftar di whitelist
+if not allowedUserIds[tostring(player.UserId)] then
     pcall(function()
         game.StarterGui:SetCore("SendNotification", {
-            Title = "Akses Ditolak",
-            Text = "UserId tidak cocok!",
-            Duration = 5
+            Title = "Akses Ditolak 🚫",
+            Text = "UserId tidak terdaftar di whitelist!",
+            Duration = 6
         })
     end)
+    warn("User tidak diizinkan:", player.Name, player.UserId)
     return
+else
+    pcall(function()
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Akses Diterima ✅",
+            Text = "Selamat datang, " .. player.Name,
+            Duration = 4
+        })
+    end)
 end
-
 -- ====== GUI SETUP ======
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "IcalGanteng_GUI"
