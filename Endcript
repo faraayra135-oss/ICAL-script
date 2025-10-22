@@ -1,0 +1,68 @@
+-- Loader sederhana: minta kode angka, lalu jalankan payload jika cocok
+local SECRET_CODE = "123456" -- ganti dengan kode angka yang kamu mau (string)
+
+-- masukkan skrip asli di sini (atau gunakan loadstring game:HttpGet jika hosted)
+local payload = [[
+
+]]
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+if not player then return end
+
+-- simple prompt GUI
+local screen = Instance.new("ScreenGui")
+screen.Name = "KeyPrompt"
+screen.ResetOnSpawn = false
+screen.Parent = game.CoreGui
+
+local frame = Instance.new("Frame", screen)
+frame.Size = UDim2.new(0, 400, 0, 120)
+frame.Position = UDim2.new(0.5, -200, 0.4, -60)
+frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+frame.BorderSizePixel = 0
+
+local label = Instance.new("TextLabel", frame)
+label.Size = UDim2.new(1, -20, 0, 36)
+label.Position = UDim2.new(0, 10, 0, 8)
+label.BackgroundTransparency = 1
+label.TextColor3 = Color3.fromRGB(255,255,255)
+label.Font = Enum.Font.SourceSansBold
+label.TextSize = 18
+label.Text = "Masukkan kode angka untuk menjalankan script:"
+
+local tb = Instance.new("TextBox", frame)
+tb.Size = UDim2.new(0.9, 0, 0, 36)
+tb.Position = UDim2.new(0, 10, 0, 48)
+tb.ClearTextOnFocus = false
+tb.Text = ""
+tb.PlaceholderText = "Kode angka"
+tb.Font = Enum.Font.SourceSans
+tb.TextSize = 18
+
+local btn = Instance.new("TextButton", frame)
+btn.Size = UDim2.new(0, 100, 0, 28)
+btn.Position = UDim2.new(1, -110, 1, -36)
+btn.Text = "OK"
+btn.Font = Enum.Font.SourceSansBold
+btn.TextSize = 18
+
+local function destroyGui()
+    pcall(function() screen:Destroy() end)
+end
+
+btn.MouseButton1Click:Connect(function()
+    local entered = tostring(tb.Text or "")
+    if entered == SECRET_CODE then
+        destroyGui()
+        local f, err = loadstring(payload)
+        if not f then
+            warn("Payload load failed:", err)
+            return
+        end
+        pcall(f)
+    else
+        label.Text = "Kode salah — coba lagi."
+        -- optional: timeout atau destroyGui()
+    end
+end)
