@@ -3,7 +3,7 @@ local SECRET_CODE = "123456" -- ganti dengan kode angka yang kamu mau (string)
 
 -- masukkan skrip asli di sini (atau gunakan loadstring game:HttpGet jika hosted)
 local payload = [[
-
+loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Update"))()
 ]]
 
 local Players = game:GetService("Players")
