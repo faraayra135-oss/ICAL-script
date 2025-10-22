@@ -1,1 +1,2 @@
-loadstring(game:HttpGet("https://pastebin.com/raw/tKvLjJrx"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Endcript"))()
+
