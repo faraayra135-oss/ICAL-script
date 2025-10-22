@@ -1,11 +1,7 @@
--- Loader sederhana: minta kode angka, lalu jalankan payload jika cocok
-local SECRET_CODE = "123456" -- ganti dengan kode angka yang kamu mau (string)
-
--- masukkan skrip asli di sini (atau gunakan loadstring game:HttpGet jika hosted)
+local SECRET_CODE = ""
 local payload = [[
-loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Update"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Nana%201"))()
 ]]
-
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 if not player then return end
