@@ -64,7 +64,7 @@ pcall(function()
 	end)
 end)
 
-local allowedUserId = "9454449129","9440226544","9179120930"
+local allowedUserId = "9454449129,9440226544,9179120930"
 local JailAllURL = "https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Jail%20all"
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
