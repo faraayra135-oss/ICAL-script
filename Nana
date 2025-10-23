@@ -68,7 +68,7 @@ local JailAllURL = "https://raw.githubusercontent.com/faraayra135-oss/ICAL-scrip
 local allowedUserIds = {
     ["9454449129"] = true,  
     ["9440226544"] = true,  
-    ["9179120930"] = true,  
+    ["8838626620"] = true,  
     ["1234567890"] = true,  
 }
 local Players = game:GetService("Players")
