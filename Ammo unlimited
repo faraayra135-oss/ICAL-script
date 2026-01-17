@@ -1,0 +1,84 @@
+--[[
+    ACS BRUTE FORCE MODIFIER
+    Cara Pakai:
+    1. Unequip Senjata (Taruh di tas)
+    2. Execute Script
+    3. Equip Senjata (Pegang)
+]]
+
+local Players = game:GetService("Players")
+local Client = Players.LocalPlayer
+local Backpack = Client.Backpack
+
+local function BruteForceMod(Tool)
+    local Modified = false
+    
+    -- Mencari SEMUA script di dalam senjata (Recursive Search)
+    for _, v in pairs(Tool:GetDescendants()) do
+        if v:IsA("ModuleScript") then
+            -- Coba baca isi module
+            local success, data = pcall(require, v)
+            
+            if success and type(data) == "table" then
+                -- Cek apakah tabel ini punya data senjata (Ammo/Recoil)
+                -- Kita cek kalau ada salah satu variabel khas ACS
+                if data.Ammo or data.StoredAmmo or data.camRecoil or data.Recoil or data.FireRate then
+                    
+                    print(">> Menemukan Setting di: " .. v.Name)
+                    
+                    -- 🔥 MODIFIKASI DIMULAI 🔥
+                    
+                    -- 1. UNLIMITED AMMO
+                    if data.Ammo then data.Ammo = math.huge end
+                    if data.StoredAmmo then data.StoredAmmo = math.huge end
+                    if data.MaxStoredAmmo then data.MaxStoredAmmo = math.huge end
+                    if data.AmmoInGun then data.AmmoInGun = math.huge end
+                    
+                    -- 2. NO RECOIL (Hapus Goyangan)
+                    if data.camRecoil then
+                        data.camRecoil = {camRecoilUp={0,0}, camRecoilTilt={0,0}, camRecoilLeft={0,0}, camRecoilRight={0,0}}
+                    end
+                    if data.gunRecoil then
+                        data.gunRecoil = {gunRecoilUp={0,0}, gunRecoilTilt={0,0}, gunRecoilLeft={0,0}, gunRecoilRight={0,0}}
+                    end
+                    if data.Recoil then data.Recoil = 0 end -- Untuk ACS versi lama
+                    
+                    -- 3. GOD DAMAGE (One Shot)
+                    local killerDamage = {100, 100} -- Rata-rata HP player 100
+                    if data.LimbDamage then data.LimbDamage = killerDamage end
+                    if data.TorsoDamage then data.TorsoDamage = killerDamage end
+                    if data.HeadDamage then data.HeadDamage = killerDamage end
+                    if data.MinDamage then data.MinDamage = 100 end
+
+                    -- 4. RAPID FIRE & NO SPREAD
+                    if data.ShootRate then data.ShootRate = 1000 end
+                    if data.MinSpread then data.MinSpread = 0 end
+                    if data.MaxSpread then data.MaxSpread = 0 end
+                    
+                    Modified = true
+                end
+            end
+        end
+    end
+    
+    if Modified then
+        print("✅ SUKSES: Senjata " .. Tool.Name .. " sudah dimodifikasi! Silakan Equip.")
+    else
+        warn("❌ GAGAL: Tidak ditemukan module setting di " .. Tool.Name)
+    end
+end
+
+-- Scan senjata yang ada di Backpack (Tas)
+print("--- MEMULAI SCANNING SENJATA DI TAS ---")
+local foundTool = false
+for _, item in pairs(Backpack:GetChildren()) do
+    if item:IsA("Tool") then
+        foundTool = true
+        BruteForceMod(item)
+    end
+end
+
+if not foundTool then
+    print("⚠️ PERINGATAN: Tidak ada senjata di Tas (Backpack)!")
+    print("⚠️ Tolong UNEQUIP (Lepas) senjata kamu dulu, baru Execute lagi.")
+end
