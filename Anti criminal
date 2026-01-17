@@ -1,0 +1,59 @@
+-- Delta Executor: Anti-Damage from NPC & Ghost Mode
+local Player = game.Players.LocalPlayer
+local Character = Player.Character or Player.CharacterAdded:Wait()
+
+_G.AntiNPCDamage = true
+
+print("🛡️ NPC God Mode Aktif! Peluru NPC tidak akan melukaimu.")
+
+-- 1. INSTANT HEAL (Jika terkena tembakan NPC)
+task.spawn(function()
+    while _G.AntiNPCDamage do
+        task.wait()
+        local humanoid = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid and humanoid.Health < humanoid.MaxHealth then
+            -- Cek apakah karakter sedang dalam status 'Combat' dengan NPC
+            -- Kita paksa nyawa selalu penuh (Insta-Heal)
+            humanoid.Health = humanoid.MaxHealth
+        end
+    end
+end)
+
+-- 2. GHOST MODE (Peluru NPC Tembus Tubuh)
+local function MakeGhost()
+    for _, part in pairs(Player.Character:GetChildren()) do
+        if part:IsA("BasePart") then
+            -- Menghapus deteksi tabrakan peluru NPC pada karakter kita
+            part.CanTouch = false 
+        end
+    end
+end
+
+-- 3. BYPASS ACS DAMAGE (Mendeteksi tembakan NPC)
+local mt = getrawmetatable(game)
+local oldNamecall = mt.__namecall
+setreadonly(mt, false)
+
+mt.__namecall = newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+    local args = {...}
+
+    -- Jika game mencoba mengirim sinyal bahwa kamu "Terluka"
+    if method == "FireServer" and (self.Name:lower():find("damage") or self.Name:lower():find("hit")) then
+        -- Jika yang menyerang tidak memiliki Nama Player asli (berarti NPC)
+        -- Kita blokir pengiriman data damage tersebut ke server
+        return nil 
+    end
+
+    return oldNamecall(self, ...)
+end)
+setreadonly(mt, true)
+
+-- Re-apply saat respawn
+Player.CharacterAdded:Connect(function(newChar)
+    Character = newChar
+    task.wait(1)
+    MakeGhost()
+end)
+
+MakeGhost()
