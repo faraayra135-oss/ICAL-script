@@ -1,0 +1,76 @@
+-- NPC Police Folder Nuker
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+
+_G.StopPolice = true
+
+print("🗑️ Folder Nuker Aktif: Mencari folder polisi di Workspace...")
+
+-- Fungsi untuk menghancurkan NPC
+local function DestroyPolice(obj)
+    if obj:IsA("Model") then
+        local found = false
+        -- Cek nama model
+        if obj.Name:lower():find("police") or obj.Name:lower():find("cop") then
+            found = true
+        end
+        -- Cek teks di dalam model (tulisan 'police')
+        if not found then
+            for _, desc in pairs(obj:GetDescendants()) do
+                if (desc:IsA("TextLabel") or desc:IsA("TextButton")) and desc.Text:lower():find("police") then
+                    found = true
+                    break
+                end
+            end
+        end
+        
+        if found then
+            obj:Destroy()
+        end
+    end
+end
+
+-- SCANNING SEMUA FOLDER DI WORKSPACE
+task.spawn(function()
+    while _G.StopPolice do
+        for _, folder in pairs(Workspace:GetChildren()) do
+            -- Kita cek semua folder, terutama yang mencurigakan (NPCs, Units, PoliceFolder)
+            if folder:IsA("Folder") or folder:IsA("Model") then
+                for _, item in pairs(folder:GetChildren()) do
+                    DestroyPolice(item)
+                end
+            end
+            -- Cek juga yang langsung di Workspace
+            DestroyPolice(folder)
+        end
+        task.wait(0.3) -- Jeda scan agar tidak lag
+    end
+end)
+
+-- INSTANT DELETE SAAT SPAWN (ChildAdded)
+Workspace.DescendantAdded:Connect(function(descendant)
+    if _G.StopPolice then
+        -- Jika ada objek baru masuk ke folder mana pun di Workspace
+        task.wait() -- Tunggu sebentar agar property termuat
+        DestroyPolice(descendant)
+    end
+end)
+
+-- HAPUS TANDA "CRIMINAL" DARI PLAYER (Pemicu Spawn)
+task.spawn(function()
+    while _G.StopPolice do
+        local p = game.Players.LocalPlayer
+        if p.Character then
+            -- Hapus status di dalam karakter
+            for _, v in pairs(p.Character:GetDescendants()) do
+                if v.Name:lower():find("criminal") or v.Name:lower():find("wanted") then
+                    v:Destroy()
+                end
+            end
+            p.Character:SetAttribute("Criminal", false)
+        end
+        task.wait(0.5)
+    end
+end)
+
+print("✅ Berhasil! Semua NPC Polisi di folder Workspace akan otomatis terhapus.")
