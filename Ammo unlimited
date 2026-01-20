@@ -29,6 +29,19 @@ RunService.RenderStepped:Connect(function()
                 end
                 if sTable.StoredAmmo then
                     sTable.StoredAmmo = 999
+sTable.RecoilPower = 0
+                sTable.MaxRecoil = 0
+                sTable.RecoilPowerX = 0
+                sTable.RecoilPowerY = 0
+                sTable.Spread = 0
+                sTable.AimSpread = 0
+               
+                sTable.ZoomFOV = 70 -- Set ke FOV standar Roblox (biasanya 70)
+                sTable.AimFOV = 70  -- Membuat saat membidik tetap di FOV normal
+                
+                -- Mematikan efek goyangan kamera (Camera Shake)
+                if sTable.CamShake then sTable.CamShake = false end
+                if sTable.CanZoom then sTable.CanZoom = false end -- Opsi tambahan beberapa versi
                 end
             end
             
