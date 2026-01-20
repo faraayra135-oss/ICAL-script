@@ -1,10 +1,11 @@
+-- ACS ULTIMATE WEAPON MOD (Ammo, Recoil, No Zoom)
 local RunService = game:GetService("RunService")
 local player = game.Players.LocalPlayer
 
-print("ACS Mod: Unlimited Ammo, No Recoil & No Zoom Aktif...")
+print("ACS Weapon Mod: Aktif (No Recoil & No Zoom)...")
 
 RunService.RenderStepped:Connect(function()
-    -- Mengumpulkan item dari Backpack dan Character (saat sedang dipegang)
+    -- Cek item di Backpack dan di tangan (Character)
     local items = {}
     if player.Backpack then
         for _, v in pairs(player.Backpack:GetChildren()) do table.insert(items, v) end
@@ -15,73 +16,45 @@ RunService.RenderStepped:Connect(function()
 
     for _, tool in pairs(items) do
         if tool:IsA("Tool") then
-            -- Cari ModuleScript Settings (ACS_Settings atau Settings)
+            -- Cari Module Settings ACS
             local settings = tool:FindFirstChild("ACS_Settings") or tool:FindFirstChild("Settings")
             
             if settings and settings:IsA("ModuleScript") then
-                -- Load module table
-                -- Catatan: Pada beberapa executor/studio, 'require' mungkin perlu penanganan khusus jika module diproteksi
-                local success, sTable = pcall(require, settings)
+                local sTable = require(settings)
                 
-                if success and sTable then
-                    
-                    -- ==============================
-                    -- 1. UNLIMITED AMMO (Dari script Anda)
-                    -- ==============================
-                    if sTable.Ammo then sTable.Ammo = 999 end
-                    if sTable.MaxAmmo then sTable.MaxAmmo = 999 end
-                    if sTable.StoredAmmo then sTable.StoredAmmo = 999 end
-
-                    -- ==============================
-                    -- 2. NO RECOIL (Anti Hentakan)
-                    -- ==============================
-                    -- ACS biasanya menggunakan CamRecoil (Kamera) dan GunRecoil (Visual Senjata)
-                    -- Format biasanya tabel: {min, max, kick, recovery} atau sejenisnya
-                    
-                    if sTable.CamRecoil then
-                        sTable.CamRecoil = {0, 0, 0, 0} -- Set semua nilai recoil kamera ke 0
-                    end
-                    
-                    if sTable.GunRecoil then
-                        sTable.GunRecoil = {0, 0, 0, 0} -- Set semua nilai recoil senjata ke 0
-                    end
-                    
-                    -- Untuk versi ACS lain yang menggunakan variabel terpisah
-                    if sTable.RecoilData then sTable.RecoilData = {0,0,0} end
-                    if sTable.MinRecoil then sTable.MinRecoil = 0 end
-                    if sTable.MaxRecoil then sTable.MaxRecoil = 0 end
-                    if sTable.RecoilSpeed then sTable.RecoilSpeed = 0 end
-
-                    -- ==============================
-                    -- 3. NO ZOOM (Kamera Tidak Zoom)
-                    -- ==============================
-                    -- Mengatur FOV saat Aim (AimFOV) agar sama dengan FOV normal (biasanya 70)
-                    
-                    if sTable.AimFOV then
-                        sTable.AimFOV = 70 
-                    end
-                    
-                    if sTable.Zoom then
-                        -- Jika Zoom adalah boolean
-                        if type(sTable.Zoom) == "boolean" then
-                            sTable.Zoom = false
-                        -- Jika Zoom adalah angka FOV
-                        elseif type(sTable.Zoom) == "number" then
-                            sTable.Zoom = 70
-                        end
-                    end
-                    
-                    -- Hapus efek blur atau sensitivitas zoom jika ada
-                    if sTable.ZoomSensitivity then sTable.ZoomSensitivity = 1 end
-                end
+                -- 1. UNLIMITED AMMO
+                sTable.Ammo = 999
+                sTable.MaxAmmo = 999
+                sTable.StoredAmmo = 999
+                
+                -- 2. NO RECOIL & NO SPREAD (Akurasi 100%)
+                sTable.RecoilPower = 0
+                sTable.MaxRecoil = 0
+                sTable.RecoilPowerX = 0
+                sTable.RecoilPowerY = 0
+                sTable.Spread = 0
+                sTable.AimSpread = 0
+                
+                -- 3. NO ZOOM & NO CAMERA EFFECTS
+                -- Mematikan perubahan FOV (Field of View) agar kamera tidak zoom
+                sTable.ZoomFOV = 70 -- Set ke FOV standar Roblox (biasanya 70)
+                sTable.AimFOV = 70  -- Membuat saat membidik tetap di FOV normal
+                
+                -- Mematikan efek goyangan kamera (Camera Shake)
+                if sTable.CamShake then sTable.CamShake = false end
+                if sTable.CanZoom then sTable.CanZoom = false end -- Opsi tambahan beberapa versi
+                
             end
-            
-            -- ==============================
-            -- HANDLING ATRIBUT (Jika ACS menggunakan Attribute)
-            -- ==============================
-            if tool:GetAttribute("Ammo") then tool:SetAttribute("Ammo", 999) end
-            if tool:GetAttribute("Recoil") then tool:SetAttribute("Recoil", 0) end
-            if tool:GetAttribute("AimFOV") then tool:SetAttribute("AimFOV", 70) end
         end
+    end
+end)
+
+-- SCRIPT TAMBAHAN UNTUK MEMAKSA FOV TETAP NORMAL
+-- (Mencegah script internal ACS memaksa kamera zoom)
+player.CameraMaxZoomDistance = 100 -- Menghindari pembatasan kamera
+local camera = workspace.CurrentCamera
+camera:GetPropertyChangedSignal("FieldOfView"):Connect(function()
+    if camera.FieldOfView ~= 70 then
+        camera.FieldOfView = 70
     end
 end)
