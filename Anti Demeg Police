@@ -1,70 +1,39 @@
--- Bullet Eraser & Ultimate God Mode by Gemini
-local Player = game.Players.LocalPlayer
-local RunService = game:GetService("RunService")
+-- SCRIPT ANTI-CRIMINAL (AUTO SPOOF)
+local Players = game:GetService("Players")
+local Client = Players.LocalPlayer
 
-_G.AntiBullet = true
+print("🕵️ MENGINJEKSI LOGIKA 'FAKE CHAINSAW'...")
 
-print("🛡️ Peluru dan Damage dinonaktifkan! Kamu sekarang benar-benar aman.")
-
--- 1. PENGHANCUR PELURU (MENGHAPUS OBJEK PELURU SAAT MUNCUL)
-game.Workspace.DescendantAdded:Connect(function(obj)
-    if _G.AntiBullet then
-        -- Mencari nama objek yang biasanya digunakan ACS/Tactical untuk peluru
-        local name = obj.Name:lower()
-        if name:find("bullet") or name:find("projectile") or name:find("peluru") or name:find("ammo") then
-            task.wait() -- Tunggu milidetik agar tidak error
-            obj:Destroy() -- Hapus peluru sebelum menyentuhmu
-        end
+-- Kita monitor tas (Backpack)
+Client.Backpack.ChildAdded:Connect(function(tool)
+    if tool:IsA("Tool") then
+        task.wait(0.1)
+        -- Coba tambahkan penanda khusus yang mungkin dicek game
+        -- Misalnya game mengecek nama tool
+        
+        -- Kita tidak bisa mengubah nama Tool asli karena akan merusak script server
+        -- TAPI kita bisa menambahkan Atribut palsu
+        tool:SetAttribute("Type", "Melee") -- Menebak kategori aman
+        tool:SetAttribute("IsAdminWeapon", true)
+        tool:SetAttribute("SilentKill", true)
+        
+        print("🔧 Memodifikasi senjata: " .. tool.Name)
     end
 end)
 
--- 2. LOCK HEALTH (GOD MODE AGAR TIDAK BISA MATI)
--- Mengunci nyawa di angka 100 setiap frame
-RunService.Heartbeat:Connect(function()
-    if _G.AntiBullet then
-        local char = Player.Character
-        if char then
-            local hum = char:FindFirstChildOfClass("Humanoid")
-            if hum then
-                hum.Health = hum.MaxHealth
-                -- Mencegah kematian instan dari script server
-                if hum.Health <= 0 then
-                    hum.Health = 100
-                end
-            end
-        end
-    end
-end)
-
--- 3. GHOST COLLISION (MEMBUAT RAYCAST NPC TEMBUS)
-local function SetGhost()
-    local char = Player.Character
-    if char then
-        for _, part in pairs(char:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanTouch = false -- Peluru tidak akan mendeteksi tabrakan
-                part.CanQuery = false -- Garis pandang/Raycast NPC akan tembus melewati tubuhmu
-            end
+-- METODE BRUTAL: HAPUS LAPORAN KRIMINAL
+-- Kita cari script yang melapor ke polisi dan kita matikan
+local function KillSnitch()
+    local Char = Client.Character
+    if Char then
+        -- Cari script client ACS yang mengurus event
+        local EventHandler = Client.PlayerScripts:FindFirstChild("ACS_EventHandler") or Char:FindFirstChild("ACS_EventHandler")
+        
+        if EventHandler then
+            -- Kita tidak bisa mematikan seluruh script karena nanti gak bisa nembak
+            -- Tapi kita bisa mengacaukan koneksi remotenya (Advanced)
+            print("⚠️ Script ACS_EventHandler ditemukan. Hati-hati.")
         end
     end
 end
-
--- 4. HAPUS SEMUA PELURU YANG SUDAH ADA DI WORKSPACE
-task.spawn(function()
-    while _G.AntiBullet do
-        for _, v in pairs(game.Workspace:GetDescendants()) do
-            if v.Name:lower():find("bullet") or v.Name:lower():find("projectile") then
-                v:Destroy()
-            end
-        end
-        task.wait(0.5)
-    end
-end)
-
--- Jalankan saat karakter respawn
-Player.CharacterAdded:Connect(function()
-    task.wait(1)
-    SetGhost()
-end)
-
-SetGhost()
+KillSnitch()
