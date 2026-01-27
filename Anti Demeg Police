@@ -1,39 +1,36 @@
--- SCRIPT ANTI-CRIMINAL (AUTO SPOOF)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local Client = Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
 
-print("🕵️ MENGINJEKSI LOGIKA 'FAKE CHAINSAW'...")
+print("🧼 AUTO CLEANER AKTIF: Otomatis menghapus status Criminal...")
 
--- Kita monitor tas (Backpack)
-Client.Backpack.ChildAdded:Connect(function(tool)
-    if tool:IsA("Tool") then
-        task.wait(0.1)
-        -- Coba tambahkan penanda khusus yang mungkin dicek game
-        -- Misalnya game mengecek nama tool
-        
-        -- Kita tidak bisa mengubah nama Tool asli karena akan merusak script server
-        -- TAPI kita bisa menambahkan Atribut palsu
-        tool:SetAttribute("Type", "Melee") -- Menebak kategori aman
-        tool:SetAttribute("IsAdminWeapon", true)
-        tool:SetAttribute("SilentKill", true)
-        
-        print("🔧 Memodifikasi senjata: " .. tool.Name)
-    end
-end)
-
--- METODE BRUTAL: HAPUS LAPORAN KRIMINAL
--- Kita cari script yang melapor ke polisi dan kita matikan
-local function KillSnitch()
-    local Char = Client.Character
-    if Char then
-        -- Cari script client ACS yang mengurus event
-        local EventHandler = Client.PlayerScripts:FindFirstChild("ACS_EventHandler") or Char:FindFirstChild("ACS_EventHandler")
-        
-        if EventHandler then
-            -- Kita tidak bisa mematikan seluruh script karena nanti gak bisa nembak
-            -- Tapi kita bisa mengacaukan koneksi remotenya (Advanced)
-            print("⚠️ Script ACS_EventHandler ditemukan. Hati-hati.")
+-- 1. Cari Remote Ganti Tim
+local TeamRemote = nil
+local function ScanRemotes()
+    for _, v in pairs(ReplicatedStorage:GetDescendants()) do
+        if v:IsA("RemoteEvent") and (string.find(v.Name, "Team") or string.find(v.Name, "Change")) then
+            print("🔎 Remote Tim ditemukan: " .. v.Name)
+            TeamRemote = v
         end
     end
 end
-KillSnitch()
+ScanRemotes()
+
+-- 2. Loop Pembersih
+RunService.Heartbeat:Connect(function()
+    -- Cek apakah kita Criminal? (Biasanya ditandai dengan Team Color atau Nama Team)
+    if LocalPlayer.Team and string.find(LocalPlayer.Team.Name, "Criminal") then
+        print("🚨 TERDETEKSI CRIMINAL! Melakukan Cuci Nama...")
+        
+        if TeamRemote then
+            -- Spam ganti tim ke Civilian
+            -- Sesuaikan nama tim "Civilian" dengan yang ada di game (bisa "Citizen", "Warga", dll)
+            pcall(function() TeamRemote:FireServer("Civilian") end)
+            pcall(function() TeamRemote:FireServer("Citizen") end)
+            
+            -- Kadang pakai TeamColor
+            pcall(function() TeamRemote:FireServer(BrickColor.new("White")) end) -- Putih biasanya Civilian
+        end
+    end
+end)
