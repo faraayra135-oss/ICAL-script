@@ -1,22 +1,54 @@
--- Gunakan ini saat memegang senjata ACS
-local function ModACS()
-    local Tool = game.Players.LocalPlayer.Character:FindFirstChildWhichIsA("Tool")
-    local Settings = Tool and (Tool:FindFirstChild("ACS_Settings") or Tool:FindFirstChild("Settings"))
-    
-    if Settings then
-        for _, v in pairs(Settings:GetChildren()) do
-            if v:IsA("ModuleScript") then
-                local Data = require(v)
-                -- Modifikasi Stat Senjata
-                Data.RecoilData = {0,0,0,0,0,0} -- Tanpa Getaran
-                Data.MinSpread = 0              -- Akurasi Laser
-                Data.MaxSpread = 0
-                Data.Ammo = 999                 -- Peluru tak terbatas
-                Data.StoredAmmo = 999
-                print("🔥 Senjata " .. Tool.Name .. " telah di-buff!")
+local RunService = game:GetService("RunService")
+local player = game.Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
+
+print("🔫 ACS GOD MODE AKTIF: Ammo, No Recoil, No Zoom...")
+
+RunService.RenderStepped:Connect(function()
+    -- 1. Kumpulkan semua Tool dari Backpack dan Character (Tangan)
+    local items = {}
+    for _, v in pairs(player.Backpack:GetChildren()) do table.insert(items, v) end
+    if player.Character then
+        for _, v in pairs(player.Character:GetChildren()) do table.insert(items, v) end
+    end
+
+    for _, tool in pairs(items) do
+        if tool:IsA("Tool") then
+            -- Cari Module ACS_Settings (bisa bernama Settings atau GunSettings juga)
+            local settings = tool:FindFirstChild("ACS_Settings") or tool:FindFirstChild("Settings") or tool:FindFirstChild("GunSettings")
+            
+            if settings and settings:IsA("ModuleScript") then
+                -- Gunakan pcall untuk mencegah script berhenti jika ada setting yang tidak ditemukan
+                pcall(function()
+                    local sTable = require(settings)
+                    
+                    -- [[ BAGIAN 1: UNLIMITED AMMO ]]
+                    sTable.Ammo = math.huge       -- Peluru di senjata tak terbatas
+                    sTable.StoredAmmo = math.huge -- Peluru cadangan tak terbatas
+                    sTable.MaxAmmo = math.huge
+                    
+                    -- [[ BAGIAN 2: NO RECOIL (ANTI GOYANG) ]]
+                    -- Mengubah nilai recoil min/max menjadi 0
+                    if sTable.Recoil then sTable.Recoil = {0, 0} end            -- Goyangan Senjata
+                    if sTable.CamRecoil then sTable.CamRecoil = {0, 0} end      -- Goyangan Kamera
+                    if sTable.CameraRecoil then sTable.CameraRecoil = {0, 0} end -- Variasi nama lain
+                    if sTable.Spread then sTable.Spread = {0, 0} end            -- Akurasi 100% (Laser)
+                    
+                    -- [[ BAGIAN 3: NO ZOOM (TETAP PANDANGAN LUAS) ]]
+                    -- Mengatur FOV (Field of View) saat membidik agar sama dengan normal (biasanya 70)
+                    local CurrentFOV = Workspace.CurrentCamera.FieldOfView
+                    
+                    if sTable.Zoom then sTable.Zoom = CurrentFOV end       -- Matikan Zoom dasar
+                    if sTable.AimFOV then sTable.AimFOV = CurrentFOV end   -- Matikan Aim Zoom
+                    if sTable.ZoomAnim then sTable.ZoomAnim = false end    -- Matikan animasi zoom
+                    
+                    -- (Opsional) Percepat FireRate
+                    -- if sTable.FireRate then sTable.FireRate = 1000 end 
+                end)
             end
+            
+            -- Fallback untuk versi ACS yang pakai Attributes
+            if tool:GetAttribute("Ammo") then tool:SetAttribute("Ammo", 999) end
         end
     end
-end
-
-ModACS()
+end)
