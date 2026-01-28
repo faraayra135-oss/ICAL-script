@@ -1,13 +1,50 @@
--- [[ DELTA BACKDOOR HUNTER V2 ]]
--- Scanner Backdoor Khusus Mobile Executor
+-- [[ DELTA BACKDOOR HUNTER V3 - DRAGGABLE ]]
+-- Scanner Backdoor Khusus Mobile Executor (Bisa Geser & Minimize)
 
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService") -- Service untuk input sentuhan/mouse
 local LocalPlayer = Players.LocalPlayer
 
--- 1. GUI SETUP (Delta Style)
+-- 1. FUNGSI AGAR GUI BISA DIGESER (DRAGGABLE)
+local function MakeDraggable(Frame)
+    local dragging, dragInput, dragStart, startPos
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+
+    Frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = Frame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    Frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
+
+-- 2. GUI SETUP
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "BackdoorScanner"
+ScreenGui.Name = "BackdoorScannerV3"
 if gethui then
     ScreenGui.Parent = gethui()
 else
@@ -16,19 +53,38 @@ else
     end
 end
 
+-- Tombol Pembuka Kecil (Icon Minimize)
+local OpenBtn = Instance.new("TextButton")
+OpenBtn.Name = "MinimizeIcon"
+OpenBtn.Parent = ScreenGui
+OpenBtn.Size = UDim2.new(0, 50, 0, 50)
+OpenBtn.Position = UDim2.new(0, 10, 0.4, 0) -- Posisi Awal
+OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+OpenBtn.BackgroundTransparency = 0.5
+OpenBtn.Text = "🕵️"
+OpenBtn.TextSize = 25
+OpenBtn.Visible = false -- Awalnya sembunyi karena menu utama muncul
+local OC = Instance.new("UICorner"); OC.CornerRadius = UDim.new(1,0); OC.Parent = OpenBtn
+
 -- Frame Utama
 local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainScanner"
 MainFrame.Parent = ScreenGui
 MainFrame.Size = UDim2.new(0, 300, 0, 250)
 MainFrame.Position = UDim2.new(0.5, -150, 0.3, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.BorderSizePixel = 0
+MainFrame.Active = true -- Penting agar input tidak tembus
 local Corner = Instance.new("UICorner"); Corner.CornerRadius = UDim.new(0, 10); Corner.Parent = MainFrame
 
--- Judul & Tombol Tutup
+-- Terapkan Fungsi Draggable ke Menu Utama & Icon
+MakeDraggable(MainFrame)
+MakeDraggable(OpenBtn)
+
+-- Judul
 local Title = Instance.new("TextLabel")
 Title.Parent = MainFrame
-Title.Size = UDim2.new(1, -40, 0, 40)
+Title.Size = UDim2.new(1, -70, 0, 40)
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.BackgroundTransparency = 1
 Title.Text = "🕵️ BACKDOOR HUNTER"
@@ -37,6 +93,7 @@ Title.Font = Enum.Font.GothamBold
 Title.TextSize = 16
 Title.TextXAlignment = Enum.TextXAlignment.Left
 
+-- Tombol Close (X) - Tutup Total
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = MainFrame
 CloseBtn.Size = UDim2.new(0, 30, 0, 30)
@@ -44,9 +101,20 @@ CloseBtn.Position = UDim2.new(1, -35, 0, 5)
 CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
 CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.new(1,1,1)
+CloseBtn.Font = Enum.Font.GothamBold
 local CC = Instance.new("UICorner"); CC.CornerRadius = UDim.new(0,6); CC.Parent = CloseBtn
 
-CloseBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false end)
+-- Tombol Minimize (-) - Sembunyi jadi Icon
+local MinBtn = Instance.new("TextButton")
+MinBtn.Parent = MainFrame
+MinBtn.Size = UDim2.new(0, 30, 0, 30)
+MinBtn.Position = UDim2.new(1, -70, 0, 5)
+MinBtn.BackgroundColor3 = Color3.fromRGB(255, 170, 0)
+MinBtn.Text = "-"
+MinBtn.TextColor3 = Color3.new(0,0,0)
+MinBtn.Font = Enum.Font.GothamBold
+MinBtn.TextSize = 20
+local MC = Instance.new("UICorner"); MC.CornerRadius = UDim.new(0,6); MC.Parent = MinBtn
 
 -- Tombol Scan
 local ScanBtn = Instance.new("TextButton")
@@ -72,16 +140,28 @@ local UIList = Instance.new("UIListLayout")
 UIList.Parent = LogScroll
 UIList.SortOrder = Enum.SortOrder.LayoutOrder
 
--- 2. DATABASE NAMA BACKDOOR (Signatures)
--- Ini adalah nama-nama remote yang sering dipakai virus
+-- 3. LOGIKA MINIMIZE & CLOSE
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy() -- Tutup Script
+end)
+
+MinBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    OpenBtn.Visible = true -- Tampilkan Icon Kecil
+end)
+
+OpenBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = true -- Tampilkan Menu
+    OpenBtn.Visible = false
+end)
+
+-- 4. DATABASE & LOGIKA SCANNER (Sama seperti sebelumnya)
 local SuspiciousNames = {
     "Backdoor", "Admin", "Run", "Client", "Monster", "Sanity", 
     "V5", "By", "Destruction", "M67", "Redweeb", "Xeon",
-    "IIl", "l1l", "1l1", -- Obfuscated names
-    "LoadString", "Get", "Post"
+    "IIl", "l1l", "1l1", "LoadString", "Get", "Post"
 }
 
--- 3. FUNGSI LOGGING
 local function AddLog(Text, IsBad)
     local Label = Instance.new("TextLabel")
     Label.Parent = LogScroll
@@ -93,18 +173,14 @@ local function AddLog(Text, IsBad)
     Label.TextXAlignment = Enum.TextXAlignment.Left
     
     if IsBad then
-        Label.TextColor3 = Color3.fromRGB(255, 100, 100) -- Merah
+        Label.TextColor3 = Color3.fromRGB(255, 100, 100)
     else
-        Label.TextColor3 = Color3.fromRGB(100, 255, 100) -- Hijau
+        Label.TextColor3 = Color3.fromRGB(100, 255, 100)
     end
-    
-    -- Auto Scroll ke bawah
     LogScroll.CanvasPosition = Vector2.new(0, 9999)
 end
 
--- 4. LOGIKA SCANNER
 ScanBtn.MouseButton1Click:Connect(function()
-    -- Bersihkan Log Lama
     for _, v in pairs(LogScroll:GetChildren()) do
         if v:IsA("TextLabel") then v:Destroy() end
     end
@@ -121,16 +197,13 @@ ScanBtn.MouseButton1Click:Connect(function()
         game:GetService("JointsService")
     }
     
-    -- Loop Service
     for _, service in pairs(ServicesToScan) do
-        -- Gunakan pcall biar gak crash kalau akses ditolak
         pcall(function()
             for _, obj in pairs(service:GetDescendants()) do
                 if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
                     local Name = string.lower(obj.Name)
                     local IsSus = false
                     
-                    -- Cek Nama
                     for _, keyword in pairs(SuspiciousNames) do
                         if string.find(Name, string.lower(keyword)) then
                             IsSus = true
@@ -138,13 +211,11 @@ ScanBtn.MouseButton1Click:Connect(function()
                         end
                     end
                     
-                    -- Cek Remote Tanpa Nama (Sering dipakai virus)
                     if Name == "" or Name == " " then IsSus = true end
                     
                     if IsSus then
                         FoundCount = FoundCount + 1
                         AddLog("⚠ " .. obj.Name .. " (@" .. obj.Parent.Name .. ")", true)
-                        print("BACKDOOR FOUND: " .. obj:GetFullName())
                     end
                 end
             end
@@ -167,19 +238,4 @@ ScanBtn.MouseButton1Click:Connect(function()
         ScanBtn.Text = "🔍 MULAI SCANNING"
         ScanBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
     end)
-end)
-
--- Tombol Pembuka Kecil (Toggle)
-local OpenBtn = Instance.new("TextButton")
-OpenBtn.Parent = ScreenGui
-OpenBtn.Size = UDim2.new(0, 50, 0, 50)
-OpenBtn.Position = UDim2.new(0, 10, 0.5, 0)
-OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-OpenBtn.BackgroundTransparency = 0.5
-OpenBtn.Text = "🕵️"
-OpenBtn.TextSize = 25
-local OC = Instance.new("UICorner"); OC.CornerRadius = UDim.new(1,0); OC.Parent = OpenBtn
-
-OpenBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
 end)
