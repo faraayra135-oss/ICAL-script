@@ -1,0 +1,185 @@
+-- [[ DELTA BACKDOOR HUNTER V2 ]]
+-- Scanner Backdoor Khusus Mobile Executor
+
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local LocalPlayer = Players.LocalPlayer
+
+-- 1. GUI SETUP (Delta Style)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "BackdoorScanner"
+if gethui then
+    ScreenGui.Parent = gethui()
+else
+    if not pcall(function() ScreenGui.Parent = CoreGui end) then
+        ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    end
+end
+
+-- Frame Utama
+local MainFrame = Instance.new("Frame")
+MainFrame.Parent = ScreenGui
+MainFrame.Size = UDim2.new(0, 300, 0, 250)
+MainFrame.Position = UDim2.new(0.5, -150, 0.3, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.BorderSizePixel = 0
+local Corner = Instance.new("UICorner"); Corner.CornerRadius = UDim.new(0, 10); Corner.Parent = MainFrame
+
+-- Judul & Tombol Tutup
+local Title = Instance.new("TextLabel")
+Title.Parent = MainFrame
+Title.Size = UDim2.new(1, -40, 0, 40)
+Title.Position = UDim2.new(0, 10, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "🕵️ BACKDOOR HUNTER"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Parent = MainFrame
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -35, 0, 5)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.new(1,1,1)
+local CC = Instance.new("UICorner"); CC.CornerRadius = UDim.new(0,6); CC.Parent = CloseBtn
+
+CloseBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false end)
+
+-- Tombol Scan
+local ScanBtn = Instance.new("TextButton")
+ScanBtn.Parent = MainFrame
+ScanBtn.Size = UDim2.new(0, 280, 0, 40)
+ScanBtn.Position = UDim2.new(0, 10, 0, 45)
+ScanBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+ScanBtn.Text = "🔍 MULAI SCANNING"
+ScanBtn.TextColor3 = Color3.new(1,1,1)
+ScanBtn.Font = Enum.Font.GothamBold
+ScanBtn.TextSize = 14
+local SC = Instance.new("UICorner"); SC.CornerRadius = UDim.new(0,8); SC.Parent = ScanBtn
+
+-- Area Log (Hasil Scan)
+local LogScroll = Instance.new("ScrollingFrame")
+LogScroll.Parent = MainFrame
+LogScroll.Size = UDim2.new(0, 280, 0, 140)
+LogScroll.Position = UDim2.new(0, 10, 0, 100)
+LogScroll.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+LogScroll.ScrollBarThickness = 4
+
+local UIList = Instance.new("UIListLayout")
+UIList.Parent = LogScroll
+UIList.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- 2. DATABASE NAMA BACKDOOR (Signatures)
+-- Ini adalah nama-nama remote yang sering dipakai virus
+local SuspiciousNames = {
+    "Backdoor", "Admin", "Run", "Client", "Monster", "Sanity", 
+    "V5", "By", "Destruction", "M67", "Redweeb", "Xeon",
+    "IIl", "l1l", "1l1", -- Obfuscated names
+    "LoadString", "Get", "Post"
+}
+
+-- 3. FUNGSI LOGGING
+local function AddLog(Text, IsBad)
+    local Label = Instance.new("TextLabel")
+    Label.Parent = LogScroll
+    Label.Size = UDim2.new(1, 0, 0, 25)
+    Label.BackgroundTransparency = 1
+    Label.Text = Text
+    Label.Font = Enum.Font.Code
+    Label.TextSize = 12
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    
+    if IsBad then
+        Label.TextColor3 = Color3.fromRGB(255, 100, 100) -- Merah
+    else
+        Label.TextColor3 = Color3.fromRGB(100, 255, 100) -- Hijau
+    end
+    
+    -- Auto Scroll ke bawah
+    LogScroll.CanvasPosition = Vector2.new(0, 9999)
+end
+
+-- 4. LOGIKA SCANNER
+ScanBtn.MouseButton1Click:Connect(function()
+    -- Bersihkan Log Lama
+    for _, v in pairs(LogScroll:GetChildren()) do
+        if v:IsA("TextLabel") then v:Destroy() end
+    end
+    
+    ScanBtn.Text = "⏳ SEDANG MEMINDAI..."
+    AddLog("[*] Memulai Scan...", false)
+    
+    local FoundCount = 0
+    local ServicesToScan = {
+        game:GetService("Workspace"),
+        game:GetService("ReplicatedStorage"),
+        game:GetService("Lighting"),
+        game:GetService("SoundService"),
+        game:GetService("JointsService")
+    }
+    
+    -- Loop Service
+    for _, service in pairs(ServicesToScan) do
+        -- Gunakan pcall biar gak crash kalau akses ditolak
+        pcall(function()
+            for _, obj in pairs(service:GetDescendants()) do
+                if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
+                    local Name = string.lower(obj.Name)
+                    local IsSus = false
+                    
+                    -- Cek Nama
+                    for _, keyword in pairs(SuspiciousNames) do
+                        if string.find(Name, string.lower(keyword)) then
+                            IsSus = true
+                            break
+                        end
+                    end
+                    
+                    -- Cek Remote Tanpa Nama (Sering dipakai virus)
+                    if Name == "" or Name == " " then IsSus = true end
+                    
+                    if IsSus then
+                        FoundCount = FoundCount + 1
+                        AddLog("⚠ " .. obj.Name .. " (@" .. obj.Parent.Name .. ")", true)
+                        print("BACKDOOR FOUND: " .. obj:GetFullName())
+                    end
+                end
+            end
+        end)
+    end
+    
+    task.wait(0.5)
+    
+    if FoundCount > 0 then
+        AddLog("🚨 DITEMUKAN " .. FoundCount .. " REMOTE SUSPEK!", true)
+        ScanBtn.Text = "❌ ADA POTENSI BAHAYA"
+        ScanBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    else
+        AddLog("✅ Tidak ditemukan remote umum.", false)
+        ScanBtn.Text = "✅ AMAN / BERSIH"
+        ScanBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+    end
+    
+    task.delay(3, function()
+        ScanBtn.Text = "🔍 MULAI SCANNING"
+        ScanBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+    end)
+end)
+
+-- Tombol Pembuka Kecil (Toggle)
+local OpenBtn = Instance.new("TextButton")
+OpenBtn.Parent = ScreenGui
+OpenBtn.Size = UDim2.new(0, 50, 0, 50)
+OpenBtn.Position = UDim2.new(0, 10, 0.5, 0)
+OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+OpenBtn.BackgroundTransparency = 0.5
+OpenBtn.Text = "🕵️"
+OpenBtn.TextSize = 25
+local OC = Instance.new("UICorner"); OC.CornerRadius = UDim.new(1,0); OC.Parent = OpenBtn
+
+OpenBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
