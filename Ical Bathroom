@@ -1,0 +1,169 @@
+--[[
+    ICAL SCRIPT HUB (GUI)
+    Gabungan: Hitbox, Anti Police, Ammo, Aimbot
+    Fitur: Draggable & Minimizable
+]]
+
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+
+-- Mencegah double GUI (Kalau dijalankan 2x, yang lama dihapus)
+if CoreGui:FindFirstChild("ICALHub") then
+    CoreGui:FindFirstChild("ICALHub"):Destroy()
+end
+
+-- 1. MEMBUAT UI DASAR
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ICALHub"
+ScreenGui.Parent = CoreGui
+
+-- FRAME UTAMA (Wadah Menu)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.3, 0, 0.3, 0) -- Posisi tengah
+MainFrame.Size = UDim2.new(0, 220, 0, 300) -- Ukuran Menu
+MainFrame.Active = true
+MainFrame.Draggable = true -- BISA DIGESER
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = MainFrame
+
+-- JUDUL / HEADER
+local Header = Instance.new("Frame")
+Header.Parent = MainFrame
+Header.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Header.Size = UDim2.new(1, 0, 0, 40)
+Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Parent = Header
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+TitleLabel.Size = UDim2.new(0.7, 0, 1, 0)
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.Text = "ICAL HUB"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 18
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- TOMBOL MINIMIZE (X)
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Parent = Header
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CloseBtn.Position = UDim2.new(0.85, 0, 0.2, 0)
+CloseBtn.Size = UDim2.new(0, 24, 0, 24)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Text = "-"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+
+-- TOMBOL BUKA (Saat di-minimize)
+local OpenBtn = Instance.new("TextButton")
+OpenBtn.Name = "OpenButton"
+OpenBtn.Parent = ScreenGui
+OpenBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+OpenBtn.Position = UDim2.new(0.02, 0, 0.4, 0) -- Di pinggir kiri
+OpenBtn.Size = UDim2.new(0, 40, 0, 40)
+OpenBtn.Font = Enum.Font.GothamBold
+OpenBtn.Text = "OPEN"
+OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenBtn.TextSize = 10
+OpenBtn.Visible = false -- Sembunyi dulu
+OpenBtn.Active = true
+OpenBtn.Draggable = true -- Tombol bukanya juga bisa digeser
+Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(0, 8)
+Instance.new("UIStroke", OpenBtn).Color = Color3.fromRGB(255, 255, 255)
+
+-- CONTAINER TOMBOL SCRIPT
+local ButtonContainer = Instance.new("ScrollingFrame")
+ButtonContainer.Parent = MainFrame
+ButtonContainer.BackgroundTransparency = 1
+ButtonContainer.Position = UDim2.new(0, 10, 0, 50)
+ButtonContainer.Size = UDim2.new(1, -20, 1, -60)
+ButtonContainer.ScrollBarThickness = 2
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Parent = ButtonContainer
+UIListLayout.Padding = UDim.new(0, 10)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- FUNGSI MEMBUAT TOMBOL SCRIPT
+local function CreateScriptBtn(text, url, color)
+    local Btn = Instance.new("TextButton")
+    Btn.Parent = ButtonContainer
+    Btn.BackgroundColor3 = color or Color3.fromRGB(60, 60, 60)
+    Btn.Size = UDim2.new(1, 0, 0, 45)
+    Btn.Font = Enum.Font.GothamSemibold
+    Btn.Text = text
+    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Btn.TextSize = 14
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 8)
+
+    Btn.MouseButton1Click:Connect(function()
+        -- Efek Klik
+        Btn.Text = "Loading..."
+        Btn.BackgroundColor3 = Color3.fromRGB(255, 200, 0) -- Kuning loading
+        
+        -- Jalankan Loadstring
+        task.spawn(function()
+            local success, err = pcall(function()
+                loadstring(game:HttpGet(url))()
+            end)
+            
+            if success then
+                Btn.Text = "BERHASIL!"
+                Btn.BackgroundColor3 = Color3.fromRGB(0, 200, 100) -- Hijau
+                task.wait(1)
+                Btn.Text = text
+                Btn.BackgroundColor3 = color or Color3.fromRGB(60, 60, 60)
+            else
+                Btn.Text = "ERROR!"
+                Btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- Merah
+                warn("Script Error: " .. err)
+                task.wait(1)
+                Btn.Text = text
+                Btn.BackgroundColor3 = color or Color3.fromRGB(60, 60, 60)
+            end
+        end)
+    end)
+end
+
+-- =============================================
+-- DAFTAR SCRIPT (MASUKKAN URL DI SINI)
+-- =============================================
+
+-- 1. HITBOX EXPANDER
+CreateScriptBtn("1. Hitbox Expander", "https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Hitbox", Color3.fromRGB(200, 50, 50))
+
+-- 2. ANTI DAMAGE POLICE
+CreateScriptBtn("2. Polisi / Anti Damage", "https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Anti%20Demeg%20Police", Color3.fromRGB(50, 100, 200))
+
+-- 3. UNLIMITED AMMO
+CreateScriptBtn("3. Unlimited Ammo", "https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Ammo%20Infinity", Color3.fromRGB(200, 150, 50))
+
+-- 4. AIMBOT
+CreateScriptBtn("4. Aimbot (Auto Aim)", "https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Aimhot", Color3.fromRGB(50, 200, 100))
+
+
+-- LOGIKA MINIMIZE / MAXIMIZE
+CloseBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    OpenBtn.Visible = true
+end)
+
+OpenBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = true
+    OpenBtn.Visible = false
+end)
+
+-- Notifikasi Awal
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "ICAL HUB";
+    Text = "Script GUI Siap! Geser menu jika menghalangi.";
+    Duration = 5;
+})
