@@ -1,0 +1,120 @@
+--[[
+    MOBILE AIMBOT (BODY TARGET)
+    Target: Badan/Dada (Lebih gampang kena)
+]]
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
+
+-- 1. GUI TOMBOL (Bisa digeser)
+local ScreenGui = Instance.new("ScreenGui")
+local LockBtn = Instance.new("TextButton")
+local UICorner = Instance.new("UICorner")
+
+ScreenGui.Name = "BodyAimbotGUI"
+ScreenGui.Parent = game.CoreGui 
+
+LockBtn.Name = "LockButton"
+LockBtn.Parent = ScreenGui
+LockBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Merah
+LockBtn.Position = UDim2.new(0.8, 0, 0.45, 0) -- Posisi agak turun sedikit
+LockBtn.Size = UDim2.new(0, 60, 0, 60)
+LockBtn.Font = Enum.Font.SourceSansBold
+LockBtn.Text = "OFF"
+LockBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+LockBtn.TextSize = 20
+LockBtn.Active = true
+LockBtn.Draggable = true -- Bisa digeser
+
+UICorner.CornerRadius = UDim.new(1, 0)
+UICorner.Parent = LockBtn
+
+-- 2. LOGIKA AIMBOT
+local Aiming = false
+local CurrentTarget = nil
+local FOV_CIRCLE = 200 -- Saya perbesar sedikit agar lebih mudah menangkap target
+
+-- Fungsi untuk mendapatkan BAGIAN BADAN yang benar (Support R6 dan R15)
+local function GetBodyPart(char)
+    -- Prioritas: Dada (R15) -> Badan (R6) -> Root (Universal)
+    return char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso") or char:FindFirstChild("HumanoidRootPart")
+end
+
+-- Fungsi mencari musuh terdekat
+local function GetClosestPlayer()
+    local closestDist = math.huge
+    local target = nil
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+            
+            local bodyPart = GetBodyPart(player.Character)
+            
+            if bodyPart then
+                -- Cek apakah musuh ada di layar
+                local screenPos, onScreen = Camera:WorldToViewportPoint(bodyPart.Position)
+                
+                if onScreen then
+                    -- Hitung jarak dari tengah layar
+                    local mousePos = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+                    local dist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+                    
+                    if dist < closestDist and dist < FOV_CIRCLE then
+                        closestDist = dist
+                        target = player.Character
+                    end
+                end
+            end
+        end
+    end
+    return target
+end
+
+-- 3. TOMBOL KLIK
+LockBtn.MouseButton1Click:Connect(function()
+    Aiming = not Aiming
+    
+    if Aiming then
+        LockBtn.Text = "ON"
+        LockBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Hijau
+        
+        CurrentTarget = GetClosestPlayer()
+        if not CurrentTarget then
+            Aiming = false
+            LockBtn.Text = "NO TGT"
+            LockBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 0)
+            task.wait(0.5)
+            LockBtn.Text = "OFF"
+            LockBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        end
+    else
+        LockBtn.Text = "OFF"
+        LockBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        CurrentTarget = nil
+    end
+end)
+
+-- 4. LOOP UTAMA (TARGET LOCK KE BADAN)
+RunService.RenderStepped:Connect(function()
+    if Aiming and CurrentTarget then
+        if CurrentTarget:FindFirstChild("Humanoid") and CurrentTarget.Humanoid.Health > 0 then
+            
+            local targetPart = GetBodyPart(CurrentTarget)
+            
+            if targetPart then
+                -- Kunci kamera ke posisi badan target
+                Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPart.Position)
+            end
+            
+        else
+            -- Musuh mati, reset
+            Aiming = false
+            CurrentTarget = nil
+            LockBtn.Text = "OFF"
+            LockBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        end
+    end
+end)
