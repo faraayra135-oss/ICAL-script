@@ -1,0 +1,147 @@
+--[[
+    HITBOX EXPANDER GUI V2
+    Fitur: Atur Ukuran Real-time & Tombol ON/OFF
+]]
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- KONFIGURASI AWAL
+local currentSize = 10
+local isEnabled = false
+local defaultSize = Vector3.new(2, 2, 1) -- Ukuran normal karakter Roblox
+
+-- 1. MEMBUAT GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "HitboxGUI"
+ScreenGui.Parent = game.CoreGui -- Masuk ke CoreGui agar aman
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.05, 0, 0.4, 0) -- Posisi di kiri tengah (aman untuk HP)
+MainFrame.Size = UDim2.new(0, 140, 0, 180)
+MainFrame.Active = true
+MainFrame.Draggable = true -- BISA DIGESER
+
+local UICorner = Instance.new("UICorner")
+UICorner.Parent = MainFrame
+
+-- JUDUL
+local Title = Instance.new("TextLabel")
+Title.Parent = MainFrame
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.new(0, 0, 0, 5)
+Title.Size = UDim2.new(1, 0, 0, 20)
+Title.Font = Enum.Font.SourceSansBold
+Title.Text = "HITBOX EXPANDER"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 16
+
+-- DISPLAY UKURAN
+local SizeLabel = Instance.new("TextLabel")
+SizeLabel.Parent = MainFrame
+SizeLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+SizeLabel.Position = UDim2.new(0.1, 0, 0.25, 0)
+SizeLabel.Size = UDim2.new(0.8, 0, 0.2, 0)
+SizeLabel.Font = Enum.Font.SourceSansBold
+SizeLabel.Text = "Size: " .. currentSize
+SizeLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+SizeLabel.TextSize = 24
+Instance.new("UICorner", SizeLabel).CornerRadius = UDim.new(0, 5)
+
+-- TOMBOL MINUS (-)
+local MinusBtn = Instance.new("TextButton")
+MinusBtn.Parent = MainFrame
+MinusBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+MinusBtn.Position = UDim2.new(0.1, 0, 0.5, 0)
+MinusBtn.Size = UDim2.new(0.35, 0, 0.2, 0)
+MinusBtn.Font = Enum.Font.SourceSansBold
+MinusBtn.Text = "-"
+MinusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinusBtn.TextSize = 24
+Instance.new("UICorner", MinusBtn).CornerRadius = UDim.new(0, 5)
+
+-- TOMBOL PLUS (+)
+local PlusBtn = Instance.new("TextButton")
+PlusBtn.Parent = MainFrame
+PlusBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+PlusBtn.Position = UDim2.new(0.55, 0, 0.5, 0)
+PlusBtn.Size = UDim2.new(0.35, 0, 0.2, 0)
+PlusBtn.Font = Enum.Font.SourceSansBold
+PlusBtn.Text = "+"
+PlusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+PlusBtn.TextSize = 24
+Instance.new("UICorner", PlusBtn).CornerRadius = UDim.new(0, 5)
+
+-- TOMBOL TOGGLE (ON/OFF)
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Parent = MainFrame
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Merah (OFF)
+ToggleBtn.Position = UDim2.new(0.1, 0, 0.75, 0)
+ToggleBtn.Size = UDim2.new(0.8, 0, 0.2, 0)
+ToggleBtn.Font = Enum.Font.SourceSansBold
+ToggleBtn.Text = "STATUS: OFF"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.TextSize = 18
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 5)
+
+-- 2. FUNGSI LOGIKA GUI
+MinusBtn.MouseButton1Click:Connect(function()
+    if currentSize > 2 then
+        currentSize = currentSize - 2 -- Kurangi ukuran
+        SizeLabel.Text = "Size: " .. currentSize
+    end
+end)
+
+PlusBtn.MouseButton1Click:Connect(function()
+    if currentSize < 50 then
+        currentSize = currentSize + 2 -- Tambah ukuran
+        SizeLabel.Text = "Size: " .. currentSize
+    end
+end)
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    isEnabled = not isEnabled
+    if isEnabled then
+        ToggleBtn.Text = "STATUS: ON"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Hijau
+    else
+        ToggleBtn.Text = "STATUS: OFF"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Merah
+        
+        -- Reset ukuran musuh saat dimatikan
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                player.Character.HumanoidRootPart.Size = defaultSize
+                player.Character.HumanoidRootPart.Transparency = 1
+                player.Character.HumanoidRootPart.CanCollide = true
+            end
+        end
+    end
+end)
+
+-- 3. LOOP UTAMA (EXPANDER)
+RunService.RenderStepped:Connect(function()
+    if not isEnabled then return end
+
+    for _, player in pairs(Players:GetPlayers()) do
+        -- Validasi: Bukan diri sendiri, punya karakter, dan hidup
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+            
+            local hrp = player.Character.HumanoidRootPart
+            
+            pcall(function()
+                -- Ubah ukuran sesuai settingan GUI
+                hrp.Size = Vector3.new(currentSize, currentSize, currentSize)
+                hrp.Transparency = 0.7 -- Agak transparan biar kelihatan
+                hrp.BrickColor = BrickColor.new("Really red")
+                hrp.Material = Enum.Material.Neon
+                hrp.CanCollide = false
+            end)
+        end
+    end
+end)
