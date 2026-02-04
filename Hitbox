@@ -1,6 +1,8 @@
 --[[
-    HITBOX EXPANDER GUI V3 (MOBILE OPTIMIZED)
-    Fitur: Minimize, Draggable, Compact Size
+    HITBOX EXPANDER GUI V4 (INVISIBLE MODE)
+    Fitur: 
+    - Hitbox 100% Transparan (Tidak menghalangi layar)
+    - Menu Minimize & Draggable (Seperti V3)
 ]]
 
 local Players = game:GetService("Players")
@@ -8,9 +10,9 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local CoreGui = game:GetService("CoreGui")
 
--- Mencegah GUI Ganda (Hapus yang lama jika dijalankan ulang)
-if CoreGui:FindFirstChild("HitboxGUI_Mobile") then
-    CoreGui:FindFirstChild("HitboxGUI_Mobile"):Destroy()
+-- Mencegah GUI Ganda
+if CoreGui:FindFirstChild("HitboxGUI_Invisible") then
+    CoreGui:FindFirstChild("HitboxGUI_Invisible"):Destroy()
 end
 
 -- KONFIGURASI AWAL
@@ -18,48 +20,44 @@ local currentSize = 10
 local isEnabled = false
 local defaultSize = Vector3.new(2, 2, 1)
 
--- 1. MEMBUAT SCREEN GUI
+-- 1. MEMBUAT GUI (Sama seperti V3)
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "HitboxGUI_Mobile"
+ScreenGui.Name = "HitboxGUI_Invisible"
 ScreenGui.Parent = CoreGui
 
--- ==========================================
 -- TOMBOL BUKA (ICON KECIL SAAT MINIMIZE)
--- ==========================================
 local OpenBtn = Instance.new("TextButton")
 OpenBtn.Name = "OpenButton"
 OpenBtn.Parent = ScreenGui
-OpenBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- Merah
-OpenBtn.Position = UDim2.new(0.02, 0, 0.5, 0) -- Posisi kiri layar
-OpenBtn.Size = UDim2.new(0, 45, 0, 45) -- Ukuran kecil
+OpenBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) 
+OpenBtn.Position = UDim2.new(0.02, 0, 0.5, 0)
+OpenBtn.Size = UDim2.new(0, 45, 0, 45)
 OpenBtn.Font = Enum.Font.GothamBold
-OpenBtn.Text = "HB" -- Singkatan Hitbox
+OpenBtn.Text = "HB" 
 OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 OpenBtn.TextSize = 18
-OpenBtn.Visible = false -- Sembunyi dulu di awal
+OpenBtn.Visible = false 
 OpenBtn.Active = true
-OpenBtn.Draggable = true -- BISA DIGESER
+OpenBtn.Draggable = true 
 Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(0, 10)
 Instance.new("UIStroke", OpenBtn).Color = Color3.fromRGB(255, 255, 255)
 
--- ==========================================
 -- FRAME UTAMA (MENU)
--- ==========================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 MainFrame.BorderSizePixel = 0
 MainFrame.Position = UDim2.new(0.1, 0, 0.3, 0)
-MainFrame.Size = UDim2.new(0, 130, 0, 160) -- Ukuran diperkecil
+MainFrame.Size = UDim2.new(0, 130, 0, 160)
 MainFrame.Active = true
-MainFrame.Draggable = true -- BISA DIGESER
+MainFrame.Draggable = true 
 
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = MainFrame
 
--- HEADER JUDUL
+-- HEADER
 local Header = Instance.new("Frame")
 Header.Parent = MainFrame
 Header.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
@@ -72,12 +70,12 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(0.6, 0, 1, 0)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "HITBOX V3"
+Title.Text = "HITBOX GHOST" -- Ganti nama jadi Ghost
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 12
 Title.TextXAlignment = Enum.TextXAlignment.Left
 
--- TOMBOL CLOSE (X) - MINIMIZE
+-- TOMBOL CLOSE (X)
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = Header
 CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
@@ -128,7 +126,7 @@ Instance.new("UICorner", PlusBtn).CornerRadius = UDim.new(0, 5)
 -- TOMBOL TOGGLE (ON/OFF)
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Parent = MainFrame
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60) -- Abu-abu (OFF)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60) 
 ToggleBtn.Position = UDim2.new(0.1, 0, 0.7, 0)
 ToggleBtn.Size = UDim2.new(0.8, 0, 0.2, 0)
 ToggleBtn.Font = Enum.Font.GothamBold
@@ -137,23 +135,17 @@ ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 ToggleBtn.TextSize = 14
 Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 5)
 
--- ==========================================
--- LOGIKA GUI (MINIMIZE & TOMBOL)
--- ==========================================
-
--- Logic Minimize
+-- LOGIKA GUI
 CloseBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = false
     OpenBtn.Visible = true
 end)
 
--- Logic Open
 OpenBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = true
     OpenBtn.Visible = false
 end)
 
--- Logic Plus/Minus
 MinusBtn.MouseButton1Click:Connect(function()
     if currentSize > 2 then
         currentSize = currentSize - 2
@@ -168,19 +160,18 @@ PlusBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Logic Toggle ON/OFF
 ToggleBtn.MouseButton1Click:Connect(function()
     isEnabled = not isEnabled
     if isEnabled then
         ToggleBtn.Text = "STATUS: ON"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100) -- Hijau
-        OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100) -- Tombol kecil jadi hijau juga
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100) 
+        OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
     else
         ToggleBtn.Text = "STATUS: OFF"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60) -- Abu
-        OpenBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- Tombol kecil jadi merah
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60) 
+        OpenBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) 
         
-        -- Reset ukuran pemain saat dimatikan
+        -- Reset saat mati
         for _, player in pairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                 pcall(function()
@@ -193,9 +184,7 @@ ToggleBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ==========================================
--- LOOP UTAMA (SISTEM HITBOX)
--- ==========================================
+-- LOOP UTAMA (MODIFIKASI TRANSPARAN)
 RunService.RenderStepped:Connect(function()
     if not isEnabled then return end
 
@@ -206,18 +195,9 @@ RunService.RenderStepped:Connect(function()
             
             pcall(function()
                 hrp.Size = Vector3.new(currentSize, currentSize, currentSize)
-                hrp.Transparency = 0.7 
-                hrp.BrickColor = BrickColor.new("Really red")
-                hrp.Material = Enum.Material.Neon
+                hrp.Transparency = 1 -- DIUBAH JADI 1 (INVISIBLE / TIDAK KELIHATAN)
                 hrp.CanCollide = false
             end)
         end
     end
 end)
-
--- Notifikasi Awal
-game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "Hitbox V3";
-    Text = "Tekan 'X' untuk mengecilkan menu!";
-    Duration = 3;
-})
