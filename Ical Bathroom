@@ -1,31 +1,34 @@
 --[[
-    ICAL SCRIPT HUB (GUI)
-    Gabungan: Hitbox, Anti Police, Ammo, Aimbot
-    Fitur: Draggable & Minimizable
+    ICAL HUB V2 (COMPLETE)
+    Gabungan: Hitbox, Police, Ammo, Aimbot + ESP WALLHACK (Local)
+    Fitur: Draggable, Minimize, & ESP Integrated
 ]]
 
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
 
--- Mencegah double GUI (Kalau dijalankan 2x, yang lama dihapus)
-if CoreGui:FindFirstChild("ICALHub") then
-    CoreGui:FindFirstChild("ICALHub"):Destroy()
+-- Mencegah double GUI
+if CoreGui:FindFirstChild("ICALHub_V2") then
+    CoreGui:FindFirstChild("ICALHub_V2"):Destroy()
 end
 
--- 1. MEMBUAT UI DASAR
+-- =============================================
+-- 1. SETUP GUI HUB UTAMA
+-- =============================================
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "ICALHub"
+ScreenGui.Name = "ICALHub_V2"
 ScreenGui.Parent = CoreGui
 
--- FRAME UTAMA (Wadah Menu)
+-- FRAME UTAMA
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 MainFrame.BorderSizePixel = 0
-MainFrame.Position = UDim2.new(0.3, 0, 0.3, 0) -- Posisi tengah
-MainFrame.Size = UDim2.new(0, 220, 0, 300) -- Ukuran Menu
+MainFrame.Position = UDim2.new(0.5, -110, 0.3, 0) -- Tengah Layar
+MainFrame.Size = UDim2.new(0, 220, 0, 320) -- Ukuran pas untuk 5 tombol
 MainFrame.Active = true
 MainFrame.Draggable = true -- BISA DIGESER
 
@@ -33,20 +36,20 @@ local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = MainFrame
 
--- JUDUL / HEADER
+-- HEADER
 local Header = Instance.new("Frame")
 Header.Parent = MainFrame
-Header.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Header.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 Header.Size = UDim2.new(1, 0, 0, 40)
 Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
 
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Parent = Header
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+TitleLabel.Position = UDim2.new(0, 15, 0, 0)
 TitleLabel.Size = UDim2.new(0.7, 0, 1, 0)
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "ICAL HUB"
+TitleLabel.Text = "ICAL HUB V2"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 18
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -55,49 +58,60 @@ TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = Header
 CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-CloseBtn.Position = UDim2.new(0.85, 0, 0.2, 0)
-CloseBtn.Size = UDim2.new(0, 24, 0, 24)
+CloseBtn.Position = UDim2.new(0.85, 0, 0.25, 0)
+CloseBtn.Size = UDim2.new(0, 20, 0, 20)
 CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.Text = "-"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 5)
 
--- TOMBOL BUKA (Saat di-minimize)
+-- TOMBOL BUKA (ICON KECIL)
 local OpenBtn = Instance.new("TextButton")
 OpenBtn.Name = "OpenButton"
 OpenBtn.Parent = ScreenGui
-OpenBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-OpenBtn.Position = UDim2.new(0.02, 0, 0.4, 0) -- Di pinggir kiri
-OpenBtn.Size = UDim2.new(0, 40, 0, 40)
+OpenBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+OpenBtn.Position = UDim2.new(0.02, 0, 0.4, 0)
+OpenBtn.Size = UDim2.new(0, 45, 0, 45)
 OpenBtn.Font = Enum.Font.GothamBold
-OpenBtn.Text = "OPEN"
+OpenBtn.Text = "HUB"
 OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-OpenBtn.TextSize = 10
-OpenBtn.Visible = false -- Sembunyi dulu
+OpenBtn.Visible = false
 OpenBtn.Active = true
-OpenBtn.Draggable = true -- Tombol bukanya juga bisa digeser
-Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(0, 8)
+OpenBtn.Draggable = true
+Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(0, 10)
 Instance.new("UIStroke", OpenBtn).Color = Color3.fromRGB(255, 255, 255)
 
--- CONTAINER TOMBOL SCRIPT
-local ButtonContainer = Instance.new("ScrollingFrame")
-ButtonContainer.Parent = MainFrame
-ButtonContainer.BackgroundTransparency = 1
-ButtonContainer.Position = UDim2.new(0, 10, 0, 50)
-ButtonContainer.Size = UDim2.new(1, -20, 1, -60)
-ButtonContainer.ScrollBarThickness = 2
+-- LOGIKA MINIMIZE
+CloseBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    OpenBtn.Visible = true
+end)
+OpenBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = true
+    OpenBtn.Visible = false
+end)
+
+-- CONTAINER TOMBOL
+local ScrollContainer = Instance.new("ScrollingFrame")
+ScrollContainer.Parent = MainFrame
+ScrollContainer.BackgroundTransparency = 1
+ScrollContainer.Position = UDim2.new(0, 10, 0, 50)
+ScrollContainer.Size = UDim2.new(1, -20, 1, -60)
+ScrollContainer.ScrollBarThickness = 4
+ScrollContainer.CanvasSize = UDim2.new(0, 0, 0, 0) -- Auto resize nanti
+ScrollContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
 local UIListLayout = Instance.new("UIListLayout")
-UIListLayout.Parent = ButtonContainer
-UIListLayout.Padding = UDim.new(0, 10)
+UIListLayout.Parent = ScrollContainer
+UIListLayout.Padding = UDim.new(0, 8)
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- FUNGSI MEMBUAT TOMBOL SCRIPT
-local function CreateScriptBtn(text, url, color)
+-- FUNGSI PEMBUAT TOMBOL
+local function CreateBtn(text, color, callback)
     local Btn = Instance.new("TextButton")
-    Btn.Parent = ButtonContainer
-    Btn.BackgroundColor3 = color or Color3.fromRGB(60, 60, 60)
-    Btn.Size = UDim2.new(1, 0, 0, 45)
+    Btn.Parent = ScrollContainer
+    Btn.BackgroundColor3 = color
+    Btn.Size = UDim2.new(1, 0, 0, 40)
     Btn.Font = Enum.Font.GothamSemibold
     Btn.Text = text
     Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -106,64 +120,215 @@ local function CreateScriptBtn(text, url, color)
 
     Btn.MouseButton1Click:Connect(function()
         -- Efek Klik
-        Btn.Text = "Loading..."
-        Btn.BackgroundColor3 = Color3.fromRGB(255, 200, 0) -- Kuning loading
+        local oldText = Btn.Text
+        Btn.Text = "Running..."
+        Btn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
         
-        -- Jalankan Loadstring
-        task.spawn(function()
-            local success, err = pcall(function()
-                loadstring(game:HttpGet(url))()
-            end)
-            
-            if success then
-                Btn.Text = "BERHASIL!"
-                Btn.BackgroundColor3 = Color3.fromRGB(0, 200, 100) -- Hijau
-                task.wait(1)
-                Btn.Text = text
-                Btn.BackgroundColor3 = color or Color3.fromRGB(60, 60, 60)
-            else
-                Btn.Text = "ERROR!"
-                Btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- Merah
-                warn("Script Error: " .. err)
-                task.wait(1)
-                Btn.Text = text
-                Btn.BackgroundColor3 = color or Color3.fromRGB(60, 60, 60)
-            end
-        end)
+        task.spawn(callback)
+        
+        task.wait(0.5)
+        Btn.Text = oldText
+        Btn.BackgroundColor3 = color
     end)
 end
 
 -- =============================================
--- DAFTAR SCRIPT (MASUKKAN URL DI SINI)
+-- 2. DAFTAR SCRIPT
 -- =============================================
 
--- 1. HITBOX EXPANDER
-CreateScriptBtn("1. Hitbox Expander", "https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Hitbox", Color3.fromRGB(200, 50, 50))
-
--- 2. ANTI DAMAGE POLICE
-CreateScriptBtn("2. Polisi / Anti Damage", "https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Anti%20Demeg%20Police", Color3.fromRGB(50, 100, 200))
-
--- 3. UNLIMITED AMMO
-CreateScriptBtn("3. Unlimited Ammo", "https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Ammo%20Infinity", Color3.fromRGB(200, 150, 50))
-
--- 4. AIMBOT
-CreateScriptBtn("4. Aimbot (Auto Aim)", "https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Aimhot", Color3.fromRGB(50, 200, 100))
-
-
--- LOGIKA MINIMIZE / MAXIMIZE
-CloseBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = false
-    OpenBtn.Visible = true
+-- SCRIPT 1: HITBOX EXPANDER
+CreateBtn("1. Hitbox Expander", Color3.fromRGB(200, 50, 50), function()
+    pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Hitbox"))() end)
 end)
 
-OpenBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = true
-    OpenBtn.Visible = false
+-- SCRIPT 2: POLISI / ANTI DAMAGE
+CreateBtn("2. Polisi (Anti Damage)", Color3.fromRGB(50, 100, 200), function()
+    pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Anti%20Demeg%20Police"))() end)
+end)
+
+-- SCRIPT 3: UNLIMITED AMMO
+CreateBtn("3. Unlimited Ammo", Color3.fromRGB(200, 150, 50), function()
+    pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Ammo%20Infinity"))() end)
+end)
+
+-- SCRIPT 4: AIMBOT
+CreateBtn("4. Aimbot (Auto Aim)", Color3.fromRGB(50, 200, 100), function()
+    pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Aimhot"))() end)
+end)
+
+-- SCRIPT 5: ESP WALLHACK (LOCAL CODE INTEGRATED)
+CreateBtn("5. ESP Wallhack", Color3.fromRGB(150, 50, 200), function()
+    -- [[ KODE ESP V2 FIXED DIINTEGRASIKAN DI SINI ]] --
+    
+    local CoreGui = game:GetService("CoreGui")
+    -- Reset jika sudah ada
+    if CoreGui:FindFirstChild("ESPGUI_Fixed") then
+        CoreGui:FindFirstChild("ESPGUI_Fixed"):Destroy()
+    end
+
+    -- GUI Setup
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "ESPGUI_Fixed"
+    ScreenGui.Parent = CoreGui
+
+    -- Tombol Buka ESP (Kecil)
+    local OpenESP = Instance.new("TextButton")
+    OpenESP.Name = "OpenESP"
+    OpenESP.Parent = ScreenGui
+    OpenESP.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+    OpenESP.Position = UDim2.new(0.02, 0, 0.5, 0)
+    OpenESP.Size = UDim2.new(0, 45, 0, 45)
+    OpenESP.Text = "ESP"
+    OpenESP.TextColor3 = Color3.fromRGB(255,255,255)
+    OpenESP.Font = Enum.Font.GothamBold
+    OpenESP.Visible = false
+    OpenESP.Draggable = true
+    OpenESP.Active = true
+    Instance.new("UICorner", OpenESP).CornerRadius = UDim.new(0,10)
+    Instance.new("UIStroke", OpenESP).Color = Color3.fromRGB(255,255,255)
+
+    -- Menu ESP Utama
+    local ESPFrame = Instance.new("Frame")
+    ESPFrame.Parent = ScreenGui
+    ESPFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    ESPFrame.Position = UDim2.new(0.2, 0, 0.3, 0)
+    ESPFrame.Size = UDim2.new(0, 160, 0, 140)
+    ESPFrame.Draggable = true
+    ESPFrame.Active = true
+    Instance.new("UICorner", ESPFrame).CornerRadius = UDim.new(0,10)
+
+    local ESPHeader = Instance.new("Frame")
+    ESPHeader.Parent = ESPFrame
+    ESPHeader.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    ESPHeader.Size = UDim2.new(1,0,0,30)
+    Instance.new("UICorner", ESPHeader).CornerRadius = UDim.new(0,10)
+
+    local ESPTitle = Instance.new("TextLabel")
+    ESPTitle.Parent = ESPHeader
+    ESPTitle.Text = "ESP MENU"
+    ESPTitle.TextColor3 = Color3.fromRGB(255,255,255)
+    ESPTitle.BackgroundTransparency = 1
+    ESPTitle.Size = UDim2.new(0.7,0,1,0)
+    ESPTitle.Font = Enum.Font.GothamBold
+    ESPTitle.TextSize = 14
+
+    local ESPClose = Instance.new("TextButton")
+    ESPClose.Parent = ESPHeader
+    ESPClose.Text = "X"
+    ESPClose.TextColor3 = Color3.fromRGB(255,255,255)
+    ESPClose.BackgroundColor3 = Color3.fromRGB(200,50,50)
+    ESPClose.Position = UDim2.new(0.8,0,0.1,0)
+    ESPClose.Size = UDim2.new(0,24,0,24)
+    Instance.new("UICorner", ESPClose).CornerRadius = UDim.new(0,5)
+
+    local ESPToggle = Instance.new("TextButton")
+    ESPToggle.Parent = ESPFrame
+    ESPToggle.Text = "STATUS: OFF"
+    ESPToggle.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    ESPToggle.TextColor3 = Color3.fromRGB(255,255,255)
+    ESPToggle.Position = UDim2.new(0.1,0,0.4,0)
+    ESPToggle.Size = UDim2.new(0.8,0,0.4,0)
+    ESPToggle.Font = Enum.Font.GothamBold
+    ESPToggle.TextSize = 16
+    Instance.new("UICorner", ESPToggle).CornerRadius = UDim.new(0,8)
+
+    -- Logic ESP
+    local espEnabled = false
+    
+    local function CreateESP(plr)
+        if plr == LocalPlayer or not plr.Character then return end
+        local head = plr.Character:FindFirstChild("Head")
+        if not head then return end
+        
+        -- Bersihkan lama
+        if plr.Character:FindFirstChild("ESPHighlight") then plr.Character.ESPHighlight:Destroy() end
+        if plr.Character:FindFirstChild("ESPNameTag") then plr.Character.ESPNameTag:Destroy() end
+        
+        -- Highlight
+        local hl = Instance.new("Highlight")
+        hl.Name = "ESPHighlight"
+        hl.Parent = plr.Character
+        hl.FillColor = Color3.fromRGB(255,0,0)
+        hl.OutlineColor = Color3.fromRGB(255,255,255)
+        hl.FillTransparency = 0.5
+        hl.OutlineTransparency = 0
+        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        
+        -- Name Tag
+        local bg = Instance.new("BillboardGui")
+        bg.Name = "ESPNameTag"
+        bg.Parent = plr.Character
+        bg.Adornee = head
+        bg.Size = UDim2.new(0,100,0,50)
+        bg.StudsOffset = Vector3.new(0,2,0)
+        bg.AlwaysOnTop = true
+        
+        local txt = Instance.new("TextLabel")
+        txt.Parent = bg
+        txt.BackgroundTransparency = 1
+        txt.Size = UDim2.new(1,0,1,0)
+        txt.Text = plr.Name
+        txt.TextColor3 = Color3.fromRGB(255,255,0)
+        txt.Font = Enum.Font.GothamBold
+        txt.TextStrokeTransparency = 0
+        
+        task.spawn(function()
+            while plr.Character and bg.Parent and CoreGui:FindFirstChild("ESPGUI_Fixed") do
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("HumanoidRootPart") then
+                    local dist = (LocalPlayer.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).Magnitude
+                    txt.Text = plr.Name .. "\n["..math.floor(dist).."m]"
+                end
+                task.wait(0.5)
+            end
+        end)
+    end
+
+    local function RemoveESP()
+        for _, v in pairs(Players:GetPlayers()) do
+            if v.Character then
+                if v.Character:FindFirstChild("ESPHighlight") then v.Character.ESPHighlight:Destroy() end
+                if v.Character:FindFirstChild("ESPNameTag") then v.Character.ESPNameTag:Destroy() end
+            end
+        end
+    end
+
+    -- Tombol Actions
+    ESPClose.MouseButton1Click:Connect(function() ESPFrame.Visible = false OpenESP.Visible = true end)
+    OpenESP.MouseButton1Click:Connect(function() ESPFrame.Visible = true OpenESP.Visible = false end)
+    
+    ESPToggle.MouseButton1Click:Connect(function()
+        espEnabled = not espEnabled
+        if espEnabled then
+            ESPToggle.Text = "STATUS: ON"
+            ESPToggle.BackgroundColor3 = Color3.fromRGB(0,200,100)
+            for _, v in pairs(Players:GetPlayers()) do CreateESP(v) end
+        else
+            ESPToggle.Text = "STATUS: OFF"
+            ESPToggle.BackgroundColor3 = Color3.fromRGB(60,60,60)
+            RemoveESP()
+        end
+    end)
+    
+    -- Auto Update
+    RunService.RenderStepped:Connect(function()
+        if not espEnabled or not CoreGui:FindFirstChild("ESPGUI_Fixed") then return end
+        for _, v in pairs(Players:GetPlayers()) do
+            if v ~= LocalPlayer and v.Character and not v.Character:FindFirstChild("ESPHighlight") then
+                CreateESP(v)
+            end
+        end
+    end)
+    
+    Players.PlayerAdded:Connect(function(v)
+        v.CharacterAdded:Connect(function()
+            if espEnabled then task.wait(1) CreateESP(v) end
+        end)
+    end)
 end)
 
 -- Notifikasi Awal
 game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "ICAL HUB";
-    Text = "Script GUI Siap! Geser menu jika menghalangi.";
+    Title = "ICAL HUB V2 SIAP";
+    Text = "Semua script telah disatukan!";
     Duration = 5;
 })
