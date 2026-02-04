@@ -1,143 +1,212 @@
 --[[
-    HITBOX EXPANDER GUI V2
-    Fitur: Atur Ukuran Real-time & Tombol ON/OFF
+    HITBOX EXPANDER GUI V3 (MOBILE OPTIMIZED)
+    Fitur: Minimize, Draggable, Compact Size
 ]]
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
+local CoreGui = game:GetService("CoreGui")
+
+-- Mencegah GUI Ganda (Hapus yang lama jika dijalankan ulang)
+if CoreGui:FindFirstChild("HitboxGUI_Mobile") then
+    CoreGui:FindFirstChild("HitboxGUI_Mobile"):Destroy()
+end
 
 -- KONFIGURASI AWAL
 local currentSize = 10
 local isEnabled = false
-local defaultSize = Vector3.new(2, 2, 1) -- Ukuran normal karakter Roblox
+local defaultSize = Vector3.new(2, 2, 1)
 
--- 1. MEMBUAT GUI
+-- 1. MEMBUAT SCREEN GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "HitboxGUI"
-ScreenGui.Parent = game.CoreGui -- Masuk ke CoreGui agar aman
+ScreenGui.Name = "HitboxGUI_Mobile"
+ScreenGui.Parent = CoreGui
 
+-- ==========================================
+-- TOMBOL BUKA (ICON KECIL SAAT MINIMIZE)
+-- ==========================================
+local OpenBtn = Instance.new("TextButton")
+OpenBtn.Name = "OpenButton"
+OpenBtn.Parent = ScreenGui
+OpenBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- Merah
+OpenBtn.Position = UDim2.new(0.02, 0, 0.5, 0) -- Posisi kiri layar
+OpenBtn.Size = UDim2.new(0, 45, 0, 45) -- Ukuran kecil
+OpenBtn.Font = Enum.Font.GothamBold
+OpenBtn.Text = "HB" -- Singkatan Hitbox
+OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenBtn.TextSize = 18
+OpenBtn.Visible = false -- Sembunyi dulu di awal
+OpenBtn.Active = true
+OpenBtn.Draggable = true -- BISA DIGESER
+Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(0, 10)
+Instance.new("UIStroke", OpenBtn).Color = Color3.fromRGB(255, 255, 255)
+
+-- ==========================================
+-- FRAME UTAMA (MENU)
+-- ==========================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 MainFrame.BorderSizePixel = 0
-MainFrame.Position = UDim2.new(0.05, 0, 0.4, 0) -- Posisi di kiri tengah (aman untuk HP)
-MainFrame.Size = UDim2.new(0, 140, 0, 180)
+MainFrame.Position = UDim2.new(0.1, 0, 0.3, 0)
+MainFrame.Size = UDim2.new(0, 130, 0, 160) -- Ukuran diperkecil
 MainFrame.Active = true
 MainFrame.Draggable = true -- BISA DIGESER
 
 local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = MainFrame
 
--- JUDUL
+-- HEADER JUDUL
+local Header = Instance.new("Frame")
+Header.Parent = MainFrame
+Header.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Header.Size = UDim2.new(1, 0, 0, 25)
+Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
+
 local Title = Instance.new("TextLabel")
-Title.Parent = MainFrame
+Title.Parent = Header
 Title.BackgroundTransparency = 1
-Title.Position = UDim2.new(0, 0, 0, 5)
-Title.Size = UDim2.new(1, 0, 0, 20)
-Title.Font = Enum.Font.SourceSansBold
-Title.Text = "HITBOX EXPANDER"
+Title.Position = UDim2.new(0, 10, 0, 0)
+Title.Size = UDim2.new(0.6, 0, 1, 0)
+Title.Font = Enum.Font.GothamBold
+Title.Text = "HITBOX V3"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 16
+Title.TextSize = 12
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- TOMBOL CLOSE (X) - MINIMIZE
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Parent = Header
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CloseBtn.Position = UDim2.new(0.8, 0, 0.1, 0)
+CloseBtn.Size = UDim2.new(0, 20, 0, 20)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 12
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 5)
 
 -- DISPLAY UKURAN
 local SizeLabel = Instance.new("TextLabel")
 SizeLabel.Parent = MainFrame
-SizeLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-SizeLabel.Position = UDim2.new(0.1, 0, 0.25, 0)
-SizeLabel.Size = UDim2.new(0.8, 0, 0.2, 0)
-SizeLabel.Font = Enum.Font.SourceSansBold
+SizeLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+SizeLabel.Position = UDim2.new(0.1, 0, 0.22, 0)
+SizeLabel.Size = UDim2.new(0.8, 0, 0.18, 0)
+SizeLabel.Font = Enum.Font.GothamBold
 SizeLabel.Text = "Size: " .. currentSize
 SizeLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
-SizeLabel.TextSize = 24
+SizeLabel.TextSize = 18
 Instance.new("UICorner", SizeLabel).CornerRadius = UDim.new(0, 5)
 
 -- TOMBOL MINUS (-)
 local MinusBtn = Instance.new("TextButton")
 MinusBtn.Parent = MainFrame
-MinusBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-MinusBtn.Position = UDim2.new(0.1, 0, 0.5, 0)
+MinusBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+MinusBtn.Position = UDim2.new(0.1, 0, 0.45, 0)
 MinusBtn.Size = UDim2.new(0.35, 0, 0.2, 0)
-MinusBtn.Font = Enum.Font.SourceSansBold
+MinusBtn.Font = Enum.Font.GothamBold
 MinusBtn.Text = "-"
 MinusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-MinusBtn.TextSize = 24
+MinusBtn.TextSize = 20
 Instance.new("UICorner", MinusBtn).CornerRadius = UDim.new(0, 5)
 
 -- TOMBOL PLUS (+)
 local PlusBtn = Instance.new("TextButton")
 PlusBtn.Parent = MainFrame
-PlusBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
-PlusBtn.Position = UDim2.new(0.55, 0, 0.5, 0)
+PlusBtn.BackgroundColor3 = Color3.fromRGB(60, 200, 60)
+PlusBtn.Position = UDim2.new(0.55, 0, 0.45, 0)
 PlusBtn.Size = UDim2.new(0.35, 0, 0.2, 0)
-PlusBtn.Font = Enum.Font.SourceSansBold
+PlusBtn.Font = Enum.Font.GothamBold
 PlusBtn.Text = "+"
 PlusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-PlusBtn.TextSize = 24
+PlusBtn.TextSize = 20
 Instance.new("UICorner", PlusBtn).CornerRadius = UDim.new(0, 5)
 
 -- TOMBOL TOGGLE (ON/OFF)
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Parent = MainFrame
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Merah (OFF)
-ToggleBtn.Position = UDim2.new(0.1, 0, 0.75, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60) -- Abu-abu (OFF)
+ToggleBtn.Position = UDim2.new(0.1, 0, 0.7, 0)
 ToggleBtn.Size = UDim2.new(0.8, 0, 0.2, 0)
-ToggleBtn.Font = Enum.Font.SourceSansBold
-ToggleBtn.Text = "STATUS: OFF"
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.Text = "OFF"
 ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.TextSize = 18
+ToggleBtn.TextSize = 14
 Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 5)
 
--- 2. FUNGSI LOGIKA GUI
+-- ==========================================
+-- LOGIKA GUI (MINIMIZE & TOMBOL)
+-- ==========================================
+
+-- Logic Minimize
+CloseBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    OpenBtn.Visible = true
+end)
+
+-- Logic Open
+OpenBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = true
+    OpenBtn.Visible = false
+end)
+
+-- Logic Plus/Minus
 MinusBtn.MouseButton1Click:Connect(function()
     if currentSize > 2 then
-        currentSize = currentSize - 2 -- Kurangi ukuran
+        currentSize = currentSize - 2
         SizeLabel.Text = "Size: " .. currentSize
     end
 end)
 
 PlusBtn.MouseButton1Click:Connect(function()
     if currentSize < 50 then
-        currentSize = currentSize + 2 -- Tambah ukuran
+        currentSize = currentSize + 2
         SizeLabel.Text = "Size: " .. currentSize
     end
 end)
 
+-- Logic Toggle ON/OFF
 ToggleBtn.MouseButton1Click:Connect(function()
     isEnabled = not isEnabled
     if isEnabled then
         ToggleBtn.Text = "STATUS: ON"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Hijau
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100) -- Hijau
+        OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100) -- Tombol kecil jadi hijau juga
     else
         ToggleBtn.Text = "STATUS: OFF"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Merah
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60) -- Abu
+        OpenBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- Tombol kecil jadi merah
         
-        -- Reset ukuran musuh saat dimatikan
+        -- Reset ukuran pemain saat dimatikan
         for _, player in pairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                player.Character.HumanoidRootPart.Size = defaultSize
-                player.Character.HumanoidRootPart.Transparency = 1
-                player.Character.HumanoidRootPart.CanCollide = true
+                pcall(function()
+                    player.Character.HumanoidRootPart.Size = defaultSize
+                    player.Character.HumanoidRootPart.Transparency = 1
+                    player.Character.HumanoidRootPart.CanCollide = true
+                end)
             end
         end
     end
 end)
 
--- 3. LOOP UTAMA (EXPANDER)
+-- ==========================================
+-- LOOP UTAMA (SISTEM HITBOX)
+-- ==========================================
 RunService.RenderStepped:Connect(function()
     if not isEnabled then return end
 
     for _, player in pairs(Players:GetPlayers()) do
-        -- Validasi: Bukan diri sendiri, punya karakter, dan hidup
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
             
             local hrp = player.Character.HumanoidRootPart
             
             pcall(function()
-                -- Ubah ukuran sesuai settingan GUI
                 hrp.Size = Vector3.new(currentSize, currentSize, currentSize)
-                hrp.Transparency = 0.7 -- Agak transparan biar kelihatan
+                hrp.Transparency = 0.7 
                 hrp.BrickColor = BrickColor.new("Really red")
                 hrp.Material = Enum.Material.Neon
                 hrp.CanCollide = false
@@ -145,3 +214,10 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
+
+-- Notifikasi Awal
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "Hitbox V3";
+    Text = "Tekan 'X' untuk mengecilkan menu!";
+    Duration = 3;
+})
