@@ -1,0 +1,108 @@
+--[[
+    ACS SUPPRESSION SPAMMER (STANDALONE)
+    Fungsi: Mengirim efek blur dan guncangan layar ke musuh.
+    Tujuan: Membuat musuh tidak bisa melihat atau membidik dengan benar.
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+-- ==============================
+-- GUI SETUP
+-- ==============================
+local ScreenGui = Instance.new("ScreenGui", LocalPlayer.PlayerGui)
+local MainFrame = Instance.new("Frame", ScreenGui)
+local Title = Instance.new("TextLabel", MainFrame)
+local TargetBox = Instance.new("TextBox", MainFrame)
+local IntensityBox = Instance.new("TextBox", MainFrame)
+local StartBtn = Instance.new("TextButton", MainFrame)
+local StopBtn = Instance.new("TextButton", MainFrame)
+
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.Position = UDim2.new(0.5, -100, 0.4, 0)
+MainFrame.Size = UDim2.new(0, 200, 0, 240)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+Title.Text = "🌀 SUPPRESSION SPAM"
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundColor3 = Color3.fromRGB(255, 120, 0)
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.Font = Enum.Font.GothamBold
+
+TargetBox.PlaceholderText = "Nama Player (Ketik 'All' untuk Semua)"
+TargetBox.Size = UDim2.new(0.9, 0, 0, 35)
+TargetBox.Position = UDim2.new(0.05, 0, 0.2, 0)
+TargetBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+TargetBox.TextColor3 = Color3.new(1, 1, 1)
+
+IntensityBox.PlaceholderText = "Intensitas (Misal: 100)"
+IntensityBox.Text = "100"
+IntensityBox.Size = UDim2.new(0.9, 0, 0, 35)
+IntensityBox.Position = UDim2.new(0.05, 0, 0.4, 0)
+IntensityBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+IntensityBox.TextColor3 = Color3.new(1, 1, 1)
+
+StartBtn.Text = "START BLIND"
+StartBtn.Size = UDim2.new(0.9, 0, 0, 45)
+StartBtn.Position = UDim2.new(0.05, 0, 0.6, 0)
+StartBtn.BackgroundColor3 = Color3.fromRGB(0, 160, 255)
+StartBtn.Font = Enum.Font.GothamBold
+
+StopBtn.Text = "STOP"
+StopBtn.Size = UDim2.new(0.9, 0, 0, 35)
+StopBtn.Position = UDim2.new(0.05, 0, 0.82, 0)
+StopBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+
+-- ==============================
+-- LOGIC
+-- ==============================
+local isSpamming = false
+local Remote = ReplicatedStorage:WaitForChild("ACS_Engine"):WaitForChild("Events"):WaitForChild("Suppression")
+
+StartBtn.MouseButton1Click:Connect(function()
+    if isSpamming then return end
+    isSpamming = true
+    StartBtn.Text = "BLINDING..."
+    
+    local intensity = tonumber(IntensityBox.Text) or 1
+    local targetName = TargetBox.Text
+    
+    task.spawn(function()
+        while isSpamming do
+            if string.lower(targetName) == "all" then
+                -- Spam ke semua orang
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer then
+                        pcall(function()
+                            Remote:FireServer(player, intensity)
+                        end)
+                    end
+                end
+            else
+                -- Spam ke satu orang
+                local targetPlayer = Players:FindFirstChild(targetName)
+                if targetPlayer then
+                    pcall(function()
+                        Remote:FireServer(targetPlayer, intensity)
+                    end)
+                else
+                    isSpamming = false
+                    StartBtn.Text = "PLAYER NOT FOUND"
+                    task.wait(1)
+                    StartBtn.Text = "START BLIND"
+                    break
+                end
+            end
+            
+            -- Jeda pengiriman (Jangan terlalu cepat agar tidak kick)
+            task.wait(0.1) 
+        end
+    end)
+end)
+
+StopBtn.MouseButton1Click:Connect(function()
+    isSpamming = false
+    StartBtn.Text = "START BLIND"
+end)
