@@ -1,0 +1,86 @@
+--[[
+    ACS WHIZZ SPAMMER (AUDIO TERROR)
+    Target: ACS_Engine > Events > Whizz
+    Efek: Musuh mendengar suara peluru lewat terus menerus (Panik Mode).
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+-- GUI SETUP
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local SpamBtn = Instance.new("TextButton")
+local Status = Instance.new("TextLabel")
+
+ScreenGui.Name = "ACS_Whizz"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+MainFrame.Position = UDim2.new(0.5, -100, 0.25, 0)
+MainFrame.Size = UDim2.new(0, 200, 0, 100)
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.BorderSizePixel = 0
+
+SpamBtn.Parent = MainFrame
+SpamBtn.Text = "🔊 START WHIZZ SPAM 🔊"
+SpamBtn.Size = UDim2.new(0.9, 0, 0.5, 0)
+SpamBtn.Position = UDim2.new(0.05, 0, 0.1, 0)
+SpamBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+SpamBtn.TextColor3 = Color3.new(1,1,1)
+SpamBtn.Font = Enum.Font.GothamBlack
+SpamBtn.TextSize = 14
+
+Status.Parent = MainFrame
+Status.Text = "Ready to annoy."
+Status.Size = UDim2.new(1, 0, 0.3, 0)
+Status.Position = UDim2.new(0, 0, 0.7, 0)
+Status.BackgroundTransparency = 1
+Status.TextColor3 = Color3.fromRGB(200, 200, 200)
+
+-- LOGIKA SPAM
+local isSpamming = false
+
+SpamBtn.MouseButton1Click:Connect(function()
+    if isSpamming then
+        isSpamming = false
+        SpamBtn.Text = "🔊 START WHIZZ SPAM 🔊"
+        SpamBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+        Status.Text = "Stopped."
+        return
+    end
+
+    -- Cari Remote Whizz
+    local ACS = ReplicatedStorage:FindFirstChild("ACS_Engine")
+    local Remote = ACS and ACS:WaitForChild("Events"):WaitForChild("Whizz")
+    
+    if not Remote then Status.Text = "Remote not found!" return end
+
+    isSpamming = true
+    SpamBtn.Text = "⛔ STOP SPAM ⛔"
+    SpamBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    Status.Text = "Terrorizing server..."
+
+    task.spawn(function()
+        while isSpamming do
+            for _, victim in pairs(Players:GetPlayers()) do
+                if victim ~= LocalPlayer then
+                    -- Kirim sinyal Whizz ke korban
+                    local args = {
+                        victim -- Argumen 1: Player Target
+                    }
+                    
+                    pcall(function()
+                        Remote:FireServer(unpack(args))
+                    end)
+                end
+            end
+            -- Kecepatan Spam (Semakin kecil semakin sering suaranya)
+            task.wait(0.1) 
+        end
+    end)
+end)
