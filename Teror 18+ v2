@@ -1,0 +1,109 @@
+--[[
+    ACS WHIZZ TERROR STANDALONE
+    Fungsi: Mengirim suara desingan peluru (near-miss sound) secara massal.
+    Tujuannya: Membuat musuh panik/paranoid karena merasa ditembaki terus.
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+-- ==============================
+-- GUI SETUP
+-- ==============================
+local ScreenGui = Instance.new("ScreenGui", LocalPlayer.PlayerGui)
+local MainFrame = Instance.new("Frame", ScreenGui)
+local Title = Instance.new("TextLabel", MainFrame)
+local TargetBox = Instance.new("TextBox", MainFrame)
+local StartBtn = Instance.new("TextButton", MainFrame)
+local StopBtn = Instance.new("TextButton", MainFrame)
+local AllBtn = Instance.new("TextButton", MainFrame)
+
+MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+MainFrame.Position = UDim2.new(0.5, -100, 0.4, 0)
+MainFrame.Size = UDim2.new(0, 200, 0, 220)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+Title.Text = "🔊 WHIZZ TERROR"
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundColor3 = Color3.fromRGB(0, 85, 255)
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.Font = Enum.Font.GothamBold
+
+TargetBox.PlaceholderText = "Nama Player (Kosong = All)"
+TargetBox.Size = UDim2.new(0.9, 0, 0, 35)
+TargetBox.Position = UDim2.new(0.05, 0, 0.2, 0)
+TargetBox.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+TargetBox.TextColor3 = Color3.new(1, 1, 1)
+
+StartBtn.Text = "START TERROR"
+StartBtn.Size = UDim2.new(0.9, 0, 0, 40)
+StartBtn.Position = UDim2.new(0.05, 0, 0.4, 0)
+StartBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 80)
+StartBtn.Font = Enum.Font.GothamBold
+
+StopBtn.Text = "STOP"
+StopBtn.Size = UDim2.new(0.9, 0, 0, 30)
+StopBtn.Position = UDim2.new(0.05, 0, 0.6, 0)
+StopBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+
+AllBtn.Text = "MODE: SINGLE TARGET"
+AllBtn.Size = UDim2.new(0.9, 0, 0, 30)
+AllBtn.Position = UDim2.new(0.05, 0, 0.8, 0)
+AllBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+
+-- ==============================
+-- LOGIC
+-- ==============================
+local isTerrorizing = false
+local modeAll = false
+local Remote = ReplicatedStorage:WaitForChild("ACS_Engine"):WaitForChild("Events"):WaitForChild("Whizz")
+
+AllBtn.MouseButton1Click:Connect(function()
+    modeAll = not modeAll
+    AllBtn.Text = modeAll and "MODE: TERROR ALL" or "MODE: SINGLE TARGET"
+    AllBtn.BackgroundColor3 = modeAll and Color3.fromRGB(255, 140, 0) or Color3.fromRGB(100, 100, 100)
+end)
+
+local function fireWhizz(target)
+    if target and target:IsA("Player") then
+        pcall(function()
+            Remote:FireServer(target)
+        end)
+    end
+end
+
+StartBtn.MouseButton1Click:Connect(function()
+    if isTerrorizing then return end
+    isTerrorizing = true
+    StartBtn.Text = "SENDING SOUNDS..."
+    
+    task.spawn(function()
+        while isTerrorizing do
+            if modeAll then
+                -- Kirim ke semua orang
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer then
+                        fireWhizz(player)
+                    end
+                end
+            else
+                -- Kirim ke target spesifik
+                local targetName = TargetBox.Text
+                local targetPlayer = Players:FindFirstChild(targetName)
+                if targetPlayer then
+                    fireWhizz(targetPlayer)
+                end
+            end
+            
+            -- Jeda sangat singkat (Ubah 0.01 ke 0.05 jika ingin lebih pelan)
+            task.wait(0.01) 
+        end
+    end)
+end)
+
+StopBtn.MouseButton1Click:Connect(function()
+    isTerrorizing = false
+    StartBtn.Text = "START TERROR"
+end)
