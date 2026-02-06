@@ -1,0 +1,146 @@
+--[[
+    ACS ENGINE: BRUTAL KILL ALL
+    Target: ACS_Engine > Events > Damage
+    Method: Mengirim paket damage palsu ke semua player.
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+-- KONFIGURASI
+local Config = {
+    Damage = 9999,   -- Damage Sekali Tembak
+    TeamCheck = true -- Ubah false jika ingin membunuh teman setim
+}
+
+-- GUI SETUP
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local KillBtn = Instance.new("TextButton")
+local StatusLbl = Instance.new("TextLabel")
+
+ScreenGui.Name = "ACS_Kill"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.Position = UDim2.new(0.5, -100, 0.1, 0)
+MainFrame.Size = UDim2.new(0, 200, 0, 100)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+KillBtn.Parent = MainFrame
+KillBtn.Text = "☠️ KILL ALL ☠️"
+KillBtn.Size = UDim2.new(0.8, 0, 0.5, 0)
+KillBtn.Position = UDim2.new(0.1, 0, 0.1, 0)
+KillBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+KillBtn.TextColor3 = Color3.new(1,1,1)
+KillBtn.Font = Enum.Font.GothamBlack
+KillBtn.TextSize = 20
+
+StatusLbl.Parent = MainFrame
+StatusLbl.Text = "Ready."
+StatusLbl.Position = UDim2.new(0, 0, 0.7, 0)
+StatusLbl.Size = UDim2.new(1, 0, 0.3, 0)
+StatusLbl.BackgroundTransparency = 1
+StatusLbl.TextColor3 = Color3.new(1,1,1)
+
+-- DATA GUN (MODIFIKASI DARI LOG KAMU)
+-- Kita buat damage-nya jadi sakit banget di dalam tabel ini
+local function getDeadlyGunData()
+    return {
+        SlideLock = true,
+        Type = "Gun",
+        ShootType = 1,
+        Bullets = 1,
+        Ammo = 999,
+        DamageFallOf = 0, -- Gak ada damage drop
+        MaxAmmo = 999,
+        IgnoreProtection = true, -- Tembus Armor
+        Tracer = false,
+        LimbDamage = {Config.Damage, Config.Damage}, -- DAMAGE KAKI/TANGAN
+        BarrelAtt = "Suppressor",
+        ShootRate = 1000, 
+        StoredAmmo = 999,
+        BulletPenetration = 100,
+        TorsoDamage = {Config.Damage, Config.Damage}, -- DAMAGE BADAN
+        MinDamage = Config.Damage,
+        HeadDamage = {Config.Damage, Config.Damage}, -- DAMAGE KEPALA
+        MuzzleVelocity = 5000,
+        gunName = "USP", -- Nama senjata (sesuaikan kalau bisa)
+        BulletType = ".45 ACP",
+        OtherAtt = "Laser"
+    }
+end
+
+local function getModData()
+    return {
+        DamageMod = 100, -- Multiplier Damage
+        minDamageMod = 100
+    }
+end
+
+-- DATA KEY (DARI LOG KAMU)
+-- Hati-hati, ini mungkin expired
+local SecurityKey = "{653e4a35-9d58-4d8c-ad33-bd71ac0064b0}\n-10454082097"
+
+-- FUNGSI EKSEKUSI
+local function KillTarget(enemy)
+    -- Cari Remote
+    local Remote = ReplicatedStorage:WaitForChild("ACS_Engine"):WaitForChild("Events"):WaitForChild("Damage")
+    
+    -- Pastikan kita pegang senjata
+    local MyTool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
+    if not MyTool then 
+        StatusLbl.Text = "Pegang Senjata Dulu!" 
+        return 
+    end
+
+    local EnemyHum = enemy.Character and enemy.Character:FindFirstChild("Humanoid")
+    if EnemyHum and EnemyHum.Health > 0 then
+        
+        -- KONSTRUKSI ARGUMEN SESUAI LOG
+        local args = {
+            MyTool,             -- Arg 1: Tool Kita
+            EnemyHum,           -- Arg 2: Target Humanoid
+            Config.Damage,      -- Arg 3: Damage Angka
+            2,                  -- Arg 4: BodyPart Type (2 = Torso/Head usually)
+            getDeadlyGunData(), -- Arg 5: Tabel Data Senjata (Edited)
+            getModData(),       -- Arg 6: Tabel Modifikasi
+            nil,                -- Arg 7 (Kosong di log)
+            nil,                -- Arg 8 (Kosong di log)
+            SecurityKey         -- Arg 9: Key Keamanan
+        }
+        
+        -- Fire Remote
+        -- Pakai spawn supaya tidak macet (karena InvokeServer itu nunggu balasan)
+        task.spawn(function()
+            pcall(function()
+                Remote:InvokeServer(unpack(args))
+            end)
+        end)
+    end
+end
+
+KillBtn.MouseButton1Click:Connect(function()
+    StatusLbl.Text = "Executing..."
+    local count = 0
+    
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            if Config.TeamCheck and p.Team == LocalPlayer.Team then
+                -- Skip teman satu tim
+            else
+                if p.Character and p.Character:FindFirstChild("Humanoid") then
+                    KillTarget(p)
+                    count = count + 1
+                end
+            end
+        end
+    end
+    StatusLbl.Text = "Sent to " .. count .. " players."
+    task.wait(1)
+    StatusLbl.Text = "Ready."
+end)
