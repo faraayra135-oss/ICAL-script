@@ -1,0 +1,81 @@
+-- [[ ACS NO RECOIL & NO ZOOM (LOG ADAPTED) ]]
+-- Dibuat berdasarkan struktur data log Damage ACS Engine
+
+local ScreenGui = Instance.new("ScreenGui")
+if gethui then ScreenGui.Parent = gethui() else ScreenGui.Parent = game:GetService("CoreGui") end
+
+local Btn = Instance.new("TextButton")
+Btn.Parent = ScreenGui
+Btn.Size = UDim2.new(0, 200, 0, 50)
+Btn.Position = UDim2.new(0.5, -100, 0.1, 0)
+Btn.Text = "APPLY NO RECOIL + NO ZOOM"
+Btn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+Btn.TextColor3 = Color3.new(1,1,1)
+Btn.Font = Enum.Font.GothamBold
+Btn.Active = true; Btn.Draggable = true
+local Corner = Instance.new("UICorner"); Corner.Parent = Btn
+
+-- FUNGSI MODIFIKASI DATA
+local function ApplyMods()
+    local count = 0
+    -- Kita scan semua tabel di memori game
+    for _, v in pairs(getgc(true)) do
+        if type(v) == "table" then
+            -- Cek apakah tabel ini adalah data senjata ACS
+            -- Kita pakai 'fingerprint' dari log kamu: 'gunRecoil' dan 'camRecoil'
+            if rawget(v, "gunRecoil") and rawget(v, "camRecoil") and rawget(v, "Zoom") then
+                
+                -- 1. MATIKAN RECOIL SENJATA (Model tidak mundur)
+                if v.gunRecoil then
+                    v.gunRecoil = {
+                        gunRecoilTilt = {0,0},
+                        gunRecoilUp = {0,0},
+                        gunRecoilLeft = {0,0},
+                        gunRecoilRight = {0,0}
+                    }
+                end
+                
+                -- 2. MATIKAN RECOIL KAMERA (Layar tidak naik)
+                if v.camRecoil then
+                    v.camRecoil = {
+                        camRecoilUp = {0,0},
+                        camRecoilRight = {0,0},
+                        camRecoilLeft = {0,0},
+                        camRecoilTilt = {0,0}
+                    }
+                end
+                
+                -- 3. MATIKAN ZOOM (Set ke FOV Normal 70)
+                -- Di log kamu ada 'Zoom' dan 'Zoom2'. Kita ubah keduanya.
+                if v.Zoom then v.Zoom = 70 end
+                if v.Zoom2 then v.Zoom2 = 70 end
+                
+                -- 4. MATIKAN SPREAD (Peluru Lurus Laser)
+                if v.MinSpread then v.MinSpread = 0 end
+                if v.MaxSpread then v.MaxSpread = 0 end
+                if v.AimInaccuracyDecrease then v.AimInaccuracyDecrease = 999 end
+                if v.RecoilPowerStepAmount then v.RecoilPowerStepAmount = 0 end
+                
+                count = count + 1
+            end
+        end
+    end
+    return count
+end
+
+Btn.MouseButton1Click:Connect(function()
+    Btn.Text = "SCANNING..."
+    local hasil = ApplyMods()
+    
+    if hasil > 0 then
+        Btn.Text = "✅ AKTIF (" .. hasil .. " Senjata)"
+        Btn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
+    else
+        Btn.Text = "❌ TIDAK DITEMUKAN"
+        Btn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+        -- Reset teks setelah 2 detik
+        task.wait(2)
+        Btn.Text = "APPLY NO RECOIL + NO ZOOM"
+        Btn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+    end
+end)
