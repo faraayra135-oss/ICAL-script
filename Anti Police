@@ -1,130 +1,81 @@
---[[
-    ACS ANTI-BULLET SHIELD (GOD MODE VS NPC)
-    Fungsi: Menghapus semua peluru/proyektil sebelum menyentuh karakter.
-    Target: Folder Projectiles, Workspace, CurrentCamera.
-]]
+-- [[ ACS POLICE IDENTITY MASKER ]]
+-- Memaksa sistem menganggap kamu adalah Police dan korban adalah Criminal
+-- Agar tidak mendapatkan status "Wanted/Criminal" saat membunuh
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
 local LocalPlayer = Players.LocalPlayer
-local Camera = Workspace.CurrentCamera
 
-local Config = {
-    Active = true,
-    Radius = 50, -- Hapus peluru dalam jarak 50 stud
-    DeleteTracers = true -- Hapus efek visual peluru juga
-}
-
--- GUI Notifikasi
-game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "Anti-Bullet ON",
-    Text = "Perisai aktif! Peluru akan dihapus otomatis.",
-    Duration = 5
-})
-
--- Fungsi Penghancur Peluru
-local function DestroyBullet(obj)
-    if not Config.Active then return end
-
-    -- Daftar nama umum peluru di ACS / Game FPS Roblox
-    local bulletNames = {
-        "Bullet", "Projectile", "Tracer", "Ray", "Beam", "Part", "MeshPart"
-    }
-    
-    -- Cek nama object
-    local isBullet = false
-    for _, name in pairs(bulletNames) do
-        if string.find(obj.Name, name) then
-            isBullet = true
-            break
-        end
-    end
-
-    -- Filter tambahan: Cek ukuran (Peluru biasanya kecil)
-    if obj:IsA("BasePart") then
-        if obj.Size.X < 0.5 and obj.Size.Y < 0.5 then
-            isBullet = true
-        end
-        -- Cek kecepatan (Peluru pasti bergerak)
-        if obj.AssemblyLinearVelocity.Magnitude > 50 then
-            isBullet = true
-        end
-    end
-
-    -- Hapus jika terdeteksi peluru & bukan bagian dari karakter kita
-    if isBullet and not obj:IsDescendantOf(LocalPlayer.Character) then
-        obj:Destroy()
-        -- print("Peluru ditangkis!") 
+-- 1. CARI MODULE ENUM
+local function GetEnumModule()
+    local Engine = ReplicatedStorage:WaitForChild("ACS_Engine", 10)
+    if Engine then
+        return Engine:WaitForChild("Modules"):WaitForChild("Enum")
     end
 end
 
--- 1. MONITOR WORKSPACE (Peluru Fisik)
-Workspace.ChildAdded:Connect(function(child)
-    if Config.Active then
-        task.wait() -- Tunggu sebentar biar property ke-load
-        DestroyBullet(child)
-    end
-end)
+local EnumModule = GetEnumModule()
+if not EnumModule then return warn("❌ Module Enum tidak ditemukan!") end
 
--- 2. MONITOR CAMERA (ACS sering taruh peluru visual di kamera)
-Camera.ChildAdded:Connect(function(child)
-    if Config.Active then
-        task.wait()
-        DestroyBullet(child)
-    end
-end)
+local EnumData = require(EnumModule)
 
--- 3. LOOP PEMBERSIHAN (Scanning Area Sekitar)
-task.spawn(function()
-    while true do
-        if Config.Active and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local myPos = LocalPlayer.Character.HumanoidRootPart.Position
-            
-            -- Scan benda di folder khusus ACS (Biasanya folder 'Temp' atau 'Debris')
-            local Debris = Workspace:FindFirstChild("Debris") or Workspace:FindFirstChild("Temp")
-            
-            if Debris then
-                for _, obj in pairs(Debris:GetChildren()) do
-                    DestroyBullet(obj)
-                end
-            end
+-- 2. KONFIGURASI IDENTITY
+-- Biasanya dalam ACS: 1 = Police/Law, 2 = Criminal/Hostile, 3 = Civilian
+local POLICE_VALUE = 1 
+local CRIMINAL_VALUE = 2
 
-            -- Scan benda melayang di sekitar kita (Zona Aman)
-            local region = Region3.new(myPos - Vector3.new(20,20,20), myPos + Vector3.new(20,20,20))
-            local parts = Workspace:FindPartsInRegion3(region, LocalPlayer.Character, 50)
-            
-            for _, part in pairs(parts) do
-                -- Hapus jika part kecil dan bukan bagian map (Named 'Bullet' usually)
-                if part.Name == "Bullet" or part.Name == "Projectile" then
-                    part:Destroy()
-                end
-            end
+-- 3. HOOKING SISTEM ENUM
+-- Kita cari kategori 'Teams' atau 'Side' di dalam Enum
+local TeamEnum = EnumData.enums.Teams or EnumData.enums.Side or EnumData.enums.Team
+
+if TeamEnum then
+    -- Simpan fungsi asli
+    local OldGetValue = TeamEnum.getValue
+    local OldGetName = TeamEnum.getName
+
+    -- BAJAK FUNGSI GETVALUE
+    TeamEnum.getValue = function(self, input)
+        local Result = OldGetValue(self, input)
+        
+        -- Jika sistem mengecek tim KITA, selalu jawab POLICE
+        if tostring(input):find(LocalPlayer.Name) then
+            return POLICE_VALUE
         end
-        RunService.Heartbeat:Wait() -- Cek setiap frame
+        
+        -- Jika sistem mengecek tim ORANG LAIN (Korban), selalu jawab CRIMINAL
+        -- Logika: Membunuh Criminal tidak akan membuatmu jadi Criminal
+        return CRIMINAL_VALUE 
     end
-end)
 
--- GUI TOMBOL ON/OFF
-local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-ScreenGui.Name = "AntiBulletGUI"
-ScreenGui.ResetOnSpawn = false
-
-local ToggleBtn = Instance.new("TextButton", ScreenGui)
-ToggleBtn.Size = UDim2.new(0, 150, 0, 50)
-ToggleBtn.Position = UDim2.new(0.5, -75, 0.9, 0) -- Tengah Bawah
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
-ToggleBtn.Text = "🛡️ SHIELD: ON"
-ToggleBtn.TextColor3 = Color3.new(1,1,1)
-ToggleBtn.Font = Enum.Font.GothamBlack
-
-ToggleBtn.MouseButton1Click:Connect(function()
-    Config.Active = not Config.Active
-    if Config.Active then
-        ToggleBtn.Text = "🛡️ SHIELD: ON"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
-    else
-        ToggleBtn.Text = "🛡️ SHIELD: OFF"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+    -- BAJAK FUNGSI GETNAME
+    TeamEnum.getName = function(self, input)
+        if tostring(input):find(LocalPlayer.Name) then
+            return "Police"
+        end
+        return "Criminal"
     end
+    
+    print("✅ Identity Masker Aktif: Kamu sekarang adalah Polisi Abadi.")
+else
+    warn("❌ Kategori 'Teams' tidak ditemukan di dalam Enum.")
+end
+
+-- 4. TAMBAHAN: REMOTE PROTECTOR
+-- Memblokir sinyal 'SetCriminal' yang dikirim oleh client ke server
+local mt = getrawmetatable(game)
+local oldNamecall = mt.__namecall
+setreadonly(mt, false)
+
+mt.__namecall = newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+    local name = self.Name
+    
+    -- Daftar remote yang biasanya mengubah status jadi jahat
+    if method == "FireServer" and (name:find("Criminal") or name:find("Wanted") or name:find("Crime")) then
+        print("🛡️ BLOCKED: Mencegah perubahan status ke Criminal!")
+        return nil
+    end
+    
+    return oldNamecall(self, ...)
 end)
+setreadonly(mt, true)
