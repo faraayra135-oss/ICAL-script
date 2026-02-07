@@ -1,36 +1,121 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+--[[
+    ACS ANTI-BULLET (SILENT MODE)
+    Fungsi: Menghapus peluru NPC/Polisi secara otomatis.
+    Status: Background Running (Tanpa Menu).
+]]
+
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local StarterGui = game:GetService("StarterGui")
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
 
-print("🧼 AUTO CLEANER AKTIF: Otomatis menghapus status Criminal...")
+-- NOTIFIKASI AKTIF
+StarterGui:SetCore("SendNotification", {
+    Title = "🛡️ SHIELD AKTIF",
+    Text = "Peluru Polisi akan dihapus otomatis...",
+    Duration = 5
+})
 
--- 1. Cari Remote Ganti Tim
-local TeamRemote = nil
-local function ScanRemotes()
-    for _, v in pairs(ReplicatedStorage:GetDescendants()) do
-        if v:IsA("RemoteEvent") and (string.find(v.Name, "Team") or string.find(v.Name, "Change")) then
-            print("🔎 Remote Tim ditemukan: " .. v.Name)
-            TeamRemote = v
+-- DAFTAR NAMA OBJEK YANG HARUS DIHAPUS
+-- Ini adalah nama-nama umum peluru di ACS dan game FPS Roblox lainnya
+local ProjectileNames = {
+    "Bullet", "Projectile", "Tracer", "Ray", "Beam", "Whizz", "HitEffect", "Part" 
+}
+
+-- FUNGSI PENGHANCUR
+local function DestroyProjectile(obj)
+    -- Cek apakah objek valid
+    if not obj or not obj.Parent then return end
+
+    -- Jangan hapus karakter sendiri
+    if obj:IsDescendantOf(LocalPlayer.Character) then return end
+
+    local isThreat = false
+
+    -- 1. Cek Nama
+    for _, name in pairs(ProjectileNames) do
+        if string.find(obj.Name, name) then
+            isThreat = true
+            break
         end
     end
-end
-ScanRemotes()
 
--- 2. Loop Pembersih
-RunService.Heartbeat:Connect(function()
-    -- Cek apakah kita Criminal? (Biasanya ditandai dengan Team Color atau Nama Team)
-    if LocalPlayer.Team and string.find(LocalPlayer.Team.Name, "Criminal") then
-        print("🚨 TERDETEKSI CRIMINAL! Melakukan Cuci Nama...")
+    -- 2. Cek Fisik (Benda kecil yang bergerak cepat)
+    if not isThreat and obj:IsA("BasePart") then
+        local velocity = obj.AssemblyLinearVelocity.Magnitude
+        local size = obj.Size.Magnitude
         
-        if TeamRemote then
-            -- Spam ganti tim ke Civilian
-            -- Sesuaikan nama tim "Civilian" dengan yang ada di game (bisa "Citizen", "Warga", dll)
-            pcall(function() TeamRemote:FireServer("Civilian") end)
-            pcall(function() TeamRemote:FireServer("Citizen") end)
-            
-            -- Kadang pakai TeamColor
-            pcall(function() TeamRemote:FireServer(BrickColor.new("White")) end) -- Putih biasanya Civilian
+        -- Jika benda kecil (< 1 stud) dan bergerak cepat (> 50 stud/s)
+        if size < 1 and velocity > 50 then
+            isThreat = true
+        end
+    end
+
+    -- EKSEKUSI
+    if isThreat then
+        -- Gunakan Debris service atau Destroy langsung
+        obj:Destroy()
+    end
+end
+
+-- ==============================
+-- MONITORING (AUTO DELETE)
+-- ==============================
+
+-- 1. Pantau Workspace (Peluru Fisik)
+Workspace.ChildAdded:Connect(function(child)
+    task.wait() -- Tunggu properti load
+    DestroyProjectile(child)
+end)
+
+-- 2. Pantau Kamera (Efek Visual/Tracer ACS sering disini)
+Camera.ChildAdded:Connect(function(child)
+    task.wait()
+    DestroyProjectile(child)
+end)
+
+-- 3. Pantau Folder Sampah ACS (Debris/Temp)
+-- ACS sering menaruh peluru di folder bernama "Temp", "Debris", atau "ACS_WorkSpace"
+task.spawn(function()
+    while true do
+        local ACS_Folders = {
+            Workspace:FindFirstChild("Temp"),
+            Workspace:FindFirstChild("Debris"),
+            Workspace:FindFirstChild("ACS_WorkSpace"),
+            Workspace:FindFirstChild("Projectiles")
+        }
+
+        for _, folder in pairs(ACS_Folders) do
+            if folder then
+                for _, child in pairs(folder:GetChildren()) do
+                    DestroyProjectile(child)
+                end
+                
+                -- Pasang listener juga biar reaktif
+                folder.ChildAdded:Connect(DestroyProjectile)
+            end
+        end
+        
+        -- Cek ulang setiap 2 detik untuk folder baru
+        task.wait(2)
+    end
+end)
+
+-- 4. Pembersihan Aggressive (Loop Cepat)
+-- Untuk menangani peluru yang lolos dari ChildAdded
+RunService.Heartbeat:Connect(function()
+    -- Scan area sekitar pemain (Radius 30 Stud)
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local myPos = LocalPlayer.Character.HumanoidRootPart.Position
+        local region = Region3.new(myPos - Vector3.new(15,15,15), myPos + Vector3.new(15,15,15))
+        local parts = Workspace:FindPartsInRegion3(region, LocalPlayer.Character, 50)
+        
+        for _, part in pairs(parts) do
+            if part.Name == "Bullet" or part.Name == "Projectile" then
+                part:Destroy()
+            end
         end
     end
 end)
