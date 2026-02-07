@@ -1,6 +1,6 @@
 --[[
     ICAL HUB V2 (COMPLETE)
-    Gabungan: Hitbox, Police, Ammo, Aimbot + ESP WALLHACK (Local)
+    Gabungan: No Recoil, Police, Ammo, Aimbot + ESP WALLHACK (Local)
     Fitur: Draggable, Minimize, & ESP Integrated
 ]]
 
@@ -136,9 +136,9 @@ end
 -- 2. DAFTAR SCRIPT
 -- =============================================
 
--- SCRIPT 1: HITBOX EXPANDER
-CreateBtn("1. Hitbox Expander", Color3.fromRGB(200, 50, 50), function()
-    pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Hitbox"))() end)
+-- SCRIPT 1: NO RECOIL
+CreateBtn("1. No Recoil", Color3.fromRGB(200, 50, 50), function()
+    pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/No%20Recoil%2018%2B"))() end)
 end)
 
 -- SCRIPT 2: POLISI / ANTI DAMAGE
