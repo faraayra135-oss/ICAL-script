@@ -1,7 +1,6 @@
 --[[
-    ICAL HUB V3 (COMPACT)
-    Gabungan: No Recoil, Police, Ammo, Aimbot, ESP, & Spam Bising
-    Fitur: Draggable, Minimize, Mobile Optimized
+    ICAL HUB V3 (COMPACT + ESP MINIMIZE)
+    Gabungan: No Recoil, Police, Ammo, Aimbot, ESP (Minimizable), & Spam Bising
 ]]
 
 local CoreGui = game:GetService("CoreGui")
@@ -15,20 +14,19 @@ if CoreGui:FindFirstChild("ICALHub_V3") then
 end
 
 -- =============================================
--- 1. SETUP GUI HUB UTAMA (COMPACT SIZE)
+-- 1. SETUP GUI HUB UTAMA
 -- =============================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "ICALHub_V3"
 ScreenGui.Parent = CoreGui
 
--- FRAME UTAMA (DIPERKECIL)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.BorderSizePixel = 0
-MainFrame.Position = UDim2.new(0.5, -90, 0.3, 0) -- Tengah
-MainFrame.Size = UDim2.new(0, 180, 0, 260) -- UKURAN LEBIH KECIL (Dulu 220x320)
+MainFrame.Position = UDim2.new(0.5, -90, 0.3, 0)
+MainFrame.Size = UDim2.new(0, 180, 0, 260)
 MainFrame.Active = true
 MainFrame.Draggable = true 
 
@@ -36,7 +34,6 @@ local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 8)
 UICorner.Parent = MainFrame
 
--- HEADER SLIM
 local Header = Instance.new("Frame")
 Header.Parent = MainFrame
 Header.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
@@ -54,7 +51,6 @@ TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 14
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
--- TOMBOL MINIMIZE (-)
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = Header
 CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
@@ -65,7 +61,6 @@ CloseBtn.Text = "-"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 4)
 
--- TOMBOL BUKA (HUB)
 local OpenBtn = Instance.new("TextButton")
 OpenBtn.Name = "OpenButton"
 OpenBtn.Parent = ScreenGui
@@ -82,7 +77,6 @@ OpenBtn.Draggable = true
 Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(0, 8)
 Instance.new("UIStroke", OpenBtn).Color = Color3.fromRGB(255, 255, 255)
 
--- LOGIKA MINIMIZE
 CloseBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = false
     OpenBtn.Visible = true
@@ -92,7 +86,6 @@ OpenBtn.MouseButton1Click:Connect(function()
     OpenBtn.Visible = false
 end)
 
--- CONTAINER TOMBOL (SCROLLING)
 local ScrollContainer = Instance.new("ScrollingFrame")
 ScrollContainer.Parent = MainFrame
 ScrollContainer.BackgroundTransparency = 1
@@ -100,25 +93,22 @@ ScrollContainer.Position = UDim2.new(0, 5, 0, 35)
 ScrollContainer.Size = UDim2.new(1, -10, 1, -40)
 ScrollContainer.ScrollBarThickness = 2
 ScrollContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
-ScrollContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
 
 local UIListLayout = Instance.new("UIListLayout")
 UIListLayout.Parent = ScrollContainer
-UIListLayout.Padding = UDim.new(0, 5) -- Jarak antar tombol lebih rapat
+UIListLayout.Padding = UDim.new(0, 5)
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- FUNGSI PEMBUAT TOMBOL
 local function CreateBtn(text, color, callback)
     local Btn = Instance.new("TextButton")
     Btn.Parent = ScrollContainer
     Btn.BackgroundColor3 = color
-    Btn.Size = UDim2.new(1, 0, 0, 35) -- Tinggi tombol dikurangi (35)
+    Btn.Size = UDim2.new(1, 0, 0, 35)
     Btn.Font = Enum.Font.GothamSemibold
     Btn.Text = text
     Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     Btn.TextSize = 12
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
-
     Btn.MouseButton1Click:Connect(function()
         local oldText = Btn.Text
         Btn.Text = "Loading..."
@@ -134,29 +124,24 @@ end
 -- 2. DAFTAR SCRIPT TERINTEGRASI
 -- =============================================
 
--- 1. NO RECOIL
 CreateBtn("1. No Recoil", Color3.fromRGB(180, 40, 40), function()
     pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/No%20Recoil%2018%2B"))() end)
 end)
 
--- 2. POLISI (ANTI DAMAGE)
 CreateBtn("2. Polisi (Anti Damage)", Color3.fromRGB(40, 80, 180), function()
     pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Anti%20Demeg%20Police"))() end)
 end)
 
--- 3. UNLIMITED AMMO
 CreateBtn("3. Unlimited Ammo", Color3.fromRGB(180, 140, 40), function()
     pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Ammo%20Infinity"))() end)
 end)
 
--- 4. AIMBOT
 CreateBtn("4. Aimbot (Auto Aim)", Color3.fromRGB(40, 180, 80), function()
     pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Aimhot"))() end)
 end)
 
--- 5. ESP WALLHACK (IN-HUB CODE)
+-- 5. ESP WALLHACK (DENGAN FITUR MINIMIZE)
 CreateBtn("5. ESP Wallhack", Color3.fromRGB(130, 40, 180), function()
-    -- Reset ESP GUI jika ada
     if CoreGui:FindFirstChild("ESPGUI_V3") then CoreGui.ESPGUI_V3:Destroy() end
 
     local ScreenGuiESP = Instance.new("ScreenGui", CoreGui)
@@ -166,8 +151,8 @@ CreateBtn("5. ESP Wallhack", Color3.fromRGB(130, 40, 180), function()
     ESPFrame.Size = UDim2.new(0, 120, 0, 100)
     ESPFrame.Position = UDim2.new(0.7, 0, 0.3, 0)
     ESPFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    ESPFrame.Draggable = true
     ESPFrame.Active = true
+    ESPFrame.Draggable = true
     Instance.new("UICorner", ESPFrame)
 
     local ESPTitle = Instance.new("TextLabel", ESPFrame)
@@ -175,8 +160,39 @@ CreateBtn("5. ESP Wallhack", Color3.fromRGB(130, 40, 180), function()
     ESPTitle.Text = "ESP MENU"
     ESPTitle.TextColor3 = Color3.fromRGB(255,255,255)
     ESPTitle.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    ESPTitle.TextSize = 12
+    ESPTitle.TextSize = 10
     Instance.new("UICorner", ESPTitle)
+
+    -- Tombol Minimize ESP
+    local ESPMinBtn = Instance.new("TextButton", ESPTitle)
+    ESPMinBtn.Size = UDim2.new(0, 18, 0, 18)
+    ESPMinBtn.Position = UDim2.new(1, -22, 0, 3)
+    ESPMinBtn.Text = "-"
+    ESPMinBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    ESPMinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Instance.new("UICorner", ESPMinBtn)
+
+    -- Tombol Buka ESP (Saat di-minimize)
+    local ESPOpenBtn = Instance.new("TextButton", ScreenGuiESP)
+    ESPOpenBtn.Size = UDim2.new(0, 35, 0, 35)
+    ESPOpenBtn.Position = UDim2.new(0.02, 0, 0.55, 0)
+    ESPOpenBtn.Text = "E"
+    ESPOpenBtn.BackgroundColor3 = Color3.fromRGB(130, 40, 180)
+    ESPOpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ESPOpenBtn.Visible = false
+    ESPOpenBtn.Active = true
+    ESPOpenBtn.Draggable = true
+    Instance.new("UICorner", ESPOpenBtn)
+    Instance.new("UIStroke", ESPOpenBtn).Color = Color3.fromRGB(255, 255, 255)
+
+    ESPMinBtn.MouseButton1Click:Connect(function()
+        ESPFrame.Visible = false
+        ESPOpenBtn.Visible = true
+    end)
+    ESPOpenBtn.MouseButton1Click:Connect(function()
+        ESPFrame.Visible = true
+        ESPOpenBtn.Visible = false
+    end)
 
     local ESPToggle = Instance.new("TextButton", ESPFrame)
     ESPToggle.Size = UDim2.new(0.8, 0, 0.4, 0)
@@ -238,14 +254,12 @@ CreateBtn("5. ESP Wallhack", Color3.fromRGB(130, 40, 180), function()
     end)
 end)
 
--- 6. SPAM BISING (TEROR AUDIO)
 CreateBtn("6. Spam Bising", Color3.fromRGB(200, 100, 0), function()
     pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Teror%20Audio%2018%2B"))() end)
 end)
 
--- Notifikasi Akhir
 game:GetService("StarterGui"):SetCore("SendNotification", {
     Title = "ICAL HUB V3 COMPACT";
-    Text = "Siap Digunakan! Spam Bising Aktif.";
-    Duration = 4;
+    Text = "Gunakan Dengan Bijak Dan Bantai Mereka Salam Bang Ical Tampan";
+    Duration = 8;
 })
