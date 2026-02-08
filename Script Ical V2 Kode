@@ -1,0 +1,111 @@
+--[[
+    ICAL HUB V2 - AUTHENTICATION LOADER
+    Database Whitelist: https://pastebin.com/raw/PHBaMu4J
+]]
+
+local WhitelistURL = "https://pastebin.com/raw/PHBaMu4J"
+local MainScriptURL = "https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Script%20Ical%20V2%20lengkap"
+
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local LocalPlayer = Players.LocalPlayer
+
+-- 1. FUNGSI MENDAPATKAN HWID
+local function GetHWID()
+    local id = (gethwid and gethwid()) or (get_hwid and get_hwid()) or game:GetService("RbxAnalyticsService"):GetClientId()
+    return string.gsub(id, "%s+", "") -- Menghapus spasi jika ada
+end
+
+local userHWID = GetHWID()
+
+-- 2. TAMPILAN LOADING / AUTHENTICATION
+if CoreGui:FindFirstChild("ICAL_Auth_System") then CoreGui.ICAL_Auth_System:Destroy() end
+local AuthGui = Instance.new("ScreenGui", CoreGui)
+AuthGui.Name = "ICAL_Auth_System"
+
+local Bg = Instance.new("Frame", AuthGui)
+Bg.Size = UDim2.new(1, 0, 1, 0)
+Bg.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Bg.ZIndex = 10000
+
+local Status = Instance.new("TextLabel", Bg)
+Status.Size = UDim2.new(1, 0, 0.4, 0)
+Status.Position = UDim2.new(0, 0, 0.2, 0)
+Status.BackgroundTransparency = 1
+Status.Font = Enum.Font.GothamBold
+Status.Text = "MEMERIKSA AKSES..."
+Status.TextColor3 = Color3.fromRGB(255, 255, 255)
+Status.TextSize = 22
+
+-- 3. PROSES PENGECEKAN KE PASTEBIN
+local success, database = pcall(function()
+    return game:HttpGet(WhitelistURL)
+end)
+
+if success then
+    -- Membersihkan database dari spasi tambahan agar pengecekan akurat
+    local cleanDatabase = string.gsub(database, "%s+", " ")
+
+    if string.find(cleanDatabase, userHWID) then
+        -- === AKSES DITERIMA ===
+        Status.Text = "AKSES DITERIMA!\nSELAMAT DATANG ICAL"
+        Status.TextColor3 = Color3.fromRGB(0, 255, 120)
+        task.wait(1.5)
+        AuthGui:Destroy()
+
+        -- JALANKAN SCRIPT UTAMA
+        loadstring(game:HttpGet(MainScriptURL))()
+    else
+        -- === AKSES DITOLAK (Munculkan Tombol Claim/Copy) ===
+        Status.Text = "AKSES DITOLAK!\nHWID TIDAK TERDAFTAR"
+        Status.TextColor3 = Color3.fromRGB(255, 50, 50)
+
+        -- Tampilan Box HWID
+        local HWIDBox = Instance.new("TextBox", Bg)
+        HWIDBox.Size = UDim2.new(0.7, 0, 0.08, 0)
+        HWIDBox.Position = UDim2.new(0.15, 0, 0.55, 0)
+        HWIDBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        HWIDBox.TextColor3 = Color3.fromRGB(255, 255, 0)
+        HWIDBox.Text = userHWID
+        HWIDBox.Font = Enum.Font.Code
+        HWIDBox.TextSize = 14
+        HWIDBox.ReadOnly = true
+        Instance.new("UICorner", HWIDBox)
+
+        -- Tombol Claim (Copy HWID)
+        local ClaimBtn = Instance.new("TextButton", Bg)
+        ClaimBtn.Name = "ClaimBtn"
+        ClaimBtn.Size = UDim2.new(0.5, 0, 0.08, 0)
+        ClaimBtn.Position = UDim2.new(0.25, 0, 0.65, 0)
+        ClaimBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+        ClaimBtn.Font = Enum.Font.GothamBold
+        ClaimBtn.Text = "CLAIM KODE (COPY)"
+        ClaimBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        ClaimBtn.TextSize = 14
+        Instance.new("UICorner", ClaimBtn)
+
+        ClaimBtn.MouseButton1Click:Connect(function()
+            if setclipboard then
+                setclipboard(userHWID)
+                ClaimBtn.Text = "BERHASIL DISALIN!"
+                ClaimBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+                task.wait(2)
+                ClaimBtn.Text = "CLAIM KODE (COPY)"
+                ClaimBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+            else
+                ClaimBtn.Text = "ERROR: TIDAK BISA SALIN"
+            end
+        end)
+
+        local Info = Instance.new("TextLabel", Bg)
+        Info.Size = UDim2.new(1, 0, 0.1, 0)
+        Info.Position = UDim2.new(0, 0, 0.75, 0)
+        Info.BackgroundTransparency = 1
+        Info.Text = "Salin kode di atas dan kirim ke Owner untuk akses."
+        Info.TextColor3 = Color3.fromRGB(150, 150, 150)
+        Info.TextSize = 12
+    end
+else
+    Status.Text = "ERROR: GAGAL MENGHUBUNGI SERVER.\nCek Koneksi Internet."
+    Status.TextColor3 = Color3.fromRGB(255, 150, 0)
+end
