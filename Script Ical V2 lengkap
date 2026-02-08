@@ -1,0 +1,251 @@
+--[[
+    ICAL HUB V3 (COMPACT)
+    Gabungan: No Recoil, Police, Ammo, Aimbot, ESP, & Spam Bising
+    Fitur: Draggable, Minimize, Mobile Optimized
+]]
+
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Mencegah double GUI
+if CoreGui:FindFirstChild("ICALHub_V3") then
+    CoreGui:FindFirstChild("ICALHub_V3"):Destroy()
+end
+
+-- =============================================
+-- 1. SETUP GUI HUB UTAMA (COMPACT SIZE)
+-- =============================================
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ICALHub_V3"
+ScreenGui.Parent = CoreGui
+
+-- FRAME UTAMA (DIPERKECIL)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.5, -90, 0.3, 0) -- Tengah
+MainFrame.Size = UDim2.new(0, 180, 0, 260) -- UKURAN LEBIH KECIL (Dulu 220x320)
+MainFrame.Active = true
+MainFrame.Draggable = true 
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
+
+-- HEADER SLIM
+local Header = Instance.new("Frame")
+Header.Parent = MainFrame
+Header.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+Header.Size = UDim2.new(1, 0, 0, 30)
+Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 8)
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Parent = Header
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+TitleLabel.Size = UDim2.new(0.7, 0, 1, 0)
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.Text = "ICAL HUB V3"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 14
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- TOMBOL MINIMIZE (-)
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Parent = Header
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CloseBtn.Position = UDim2.new(0.85, 0, 0.15, 0)
+CloseBtn.Size = UDim2.new(0, 20, 0, 20)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Text = "-"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 4)
+
+-- TOMBOL BUKA (HUB)
+local OpenBtn = Instance.new("TextButton")
+OpenBtn.Name = "OpenButton"
+OpenBtn.Parent = ScreenGui
+OpenBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+OpenBtn.Position = UDim2.new(0.02, 0, 0.45, 0)
+OpenBtn.Size = UDim2.new(0, 40, 0, 40)
+OpenBtn.Font = Enum.Font.GothamBold
+OpenBtn.Text = "HUB"
+OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenBtn.TextSize = 12
+OpenBtn.Visible = false
+OpenBtn.Active = true
+OpenBtn.Draggable = true
+Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(0, 8)
+Instance.new("UIStroke", OpenBtn).Color = Color3.fromRGB(255, 255, 255)
+
+-- LOGIKA MINIMIZE
+CloseBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    OpenBtn.Visible = true
+end)
+OpenBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = true
+    OpenBtn.Visible = false
+end)
+
+-- CONTAINER TOMBOL (SCROLLING)
+local ScrollContainer = Instance.new("ScrollingFrame")
+ScrollContainer.Parent = MainFrame
+ScrollContainer.BackgroundTransparency = 1
+ScrollContainer.Position = UDim2.new(0, 5, 0, 35)
+ScrollContainer.Size = UDim2.new(1, -10, 1, -40)
+ScrollContainer.ScrollBarThickness = 2
+ScrollContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
+ScrollContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Parent = ScrollContainer
+UIListLayout.Padding = UDim.new(0, 5) -- Jarak antar tombol lebih rapat
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- FUNGSI PEMBUAT TOMBOL
+local function CreateBtn(text, color, callback)
+    local Btn = Instance.new("TextButton")
+    Btn.Parent = ScrollContainer
+    Btn.BackgroundColor3 = color
+    Btn.Size = UDim2.new(1, 0, 0, 35) -- Tinggi tombol dikurangi (35)
+    Btn.Font = Enum.Font.GothamSemibold
+    Btn.Text = text
+    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Btn.TextSize = 12
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
+
+    Btn.MouseButton1Click:Connect(function()
+        local oldText = Btn.Text
+        Btn.Text = "Loading..."
+        Btn.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+        task.spawn(callback)
+        task.wait(0.5)
+        Btn.Text = oldText
+        Btn.BackgroundColor3 = color
+    end)
+end
+
+-- =============================================
+-- 2. DAFTAR SCRIPT TERINTEGRASI
+-- =============================================
+
+-- 1. NO RECOIL
+CreateBtn("1. No Recoil", Color3.fromRGB(180, 40, 40), function()
+    pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/No%20Recoil%2018%2B"))() end)
+end)
+
+-- 2. POLISI (ANTI DAMAGE)
+CreateBtn("2. Polisi (Anti Damage)", Color3.fromRGB(40, 80, 180), function()
+    pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Anti%20Demeg%20Police"))() end)
+end)
+
+-- 3. UNLIMITED AMMO
+CreateBtn("3. Unlimited Ammo", Color3.fromRGB(180, 140, 40), function()
+    pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Ammo%20Infinity"))() end)
+end)
+
+-- 4. AIMBOT
+CreateBtn("4. Aimbot (Auto Aim)", Color3.fromRGB(40, 180, 80), function()
+    pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Aimhot"))() end)
+end)
+
+-- 5. ESP WALLHACK (IN-HUB CODE)
+CreateBtn("5. ESP Wallhack", Color3.fromRGB(130, 40, 180), function()
+    -- Reset ESP GUI jika ada
+    if CoreGui:FindFirstChild("ESPGUI_V3") then CoreGui.ESPGUI_V3:Destroy() end
+
+    local ScreenGuiESP = Instance.new("ScreenGui", CoreGui)
+    ScreenGuiESP.Name = "ESPGUI_V3"
+
+    local ESPFrame = Instance.new("Frame", ScreenGuiESP)
+    ESPFrame.Size = UDim2.new(0, 120, 0, 100)
+    ESPFrame.Position = UDim2.new(0.7, 0, 0.3, 0)
+    ESPFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    ESPFrame.Draggable = true
+    ESPFrame.Active = true
+    Instance.new("UICorner", ESPFrame)
+
+    local ESPTitle = Instance.new("TextLabel", ESPFrame)
+    ESPTitle.Size = UDim2.new(1, 0, 0, 25)
+    ESPTitle.Text = "ESP MENU"
+    ESPTitle.TextColor3 = Color3.fromRGB(255,255,255)
+    ESPTitle.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    ESPTitle.TextSize = 12
+    Instance.new("UICorner", ESPTitle)
+
+    local ESPToggle = Instance.new("TextButton", ESPFrame)
+    ESPToggle.Size = UDim2.new(0.8, 0, 0.4, 0)
+    ESPToggle.Position = UDim2.new(0.1, 0, 0.45, 0)
+    ESPToggle.Text = "ESP: OFF"
+    ESPToggle.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    ESPToggle.TextColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", ESPToggle)
+
+    local espEnabled = false
+    local function HandleESP(plr)
+        if plr == LocalPlayer or not plr.Character then return end
+        if plr.Character:FindFirstChild("ESPHl") then plr.Character.ESPHl:Destroy() end
+        if plr.Character:FindFirstChild("ESPNm") then plr.Character.ESPNm:Destroy() end
+
+        local hl = Instance.new("Highlight", plr.Character)
+        hl.Name = "ESPHl"
+        hl.FillColor = Color3.fromRGB(255,0,0)
+        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+
+        local bg = Instance.new("BillboardGui", plr.Character)
+        bg.Name = "ESPNm"
+        bg.Adornee = plr.Character:FindFirstChild("Head")
+        bg.Size = UDim2.new(0, 80, 0, 40)
+        bg.AlwaysOnTop = true
+        bg.StudsOffset = Vector3.new(0, 2, 0)
+
+        local txt = Instance.new("TextLabel", bg)
+        txt.Size = UDim2.new(1,0,1,0)
+        txt.BackgroundTransparency = 1
+        txt.Text = plr.Name
+        txt.TextColor3 = Color3.fromRGB(255,255,0)
+        txt.TextSize = 10
+        txt.Font = Enum.Font.GothamBold
+    end
+
+    ESPToggle.MouseButton1Click:Connect(function()
+        espEnabled = not espEnabled
+        ESPToggle.Text = espEnabled and "ESP: ON" or "ESP: OFF"
+        ESPToggle.BackgroundColor3 = espEnabled and Color3.fromRGB(0,200,100) or Color3.fromRGB(60,60,60)
+        if not espEnabled then
+            for _, v in pairs(Players:GetPlayers()) do
+                if v.Character then
+                    if v.Character:FindFirstChild("ESPHl") then v.Character.ESPHl:Destroy() end
+                    if v.Character:FindFirstChild("ESPNm") then v.Character.ESPNm:Destroy() end
+                end
+            end
+        end
+    end)
+
+    RunService.RenderStepped:Connect(function()
+        if espEnabled then
+            for _, v in pairs(Players:GetPlayers()) do
+                if v ~= LocalPlayer and v.Character and not v.Character:FindFirstChild("ESPHl") then
+                    HandleESP(v)
+                end
+            end
+        end
+    end)
+end)
+
+-- 6. SPAM BISING (TEROR AUDIO)
+CreateBtn("6. Spam Bising", Color3.fromRGB(200, 100, 0), function()
+    pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Teror%20Audio%2018%2B"))() end)
+end)
+
+-- Notifikasi Akhir
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "ICAL HUB V3 COMPACT";
+    Text = "Siap Digunakan! Spam Bising Aktif.";
+    Duration = 4;
+})
