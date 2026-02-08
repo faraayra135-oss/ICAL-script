@@ -255,7 +255,7 @@ CreateBtn("5. ESP Wallhack", Color3.fromRGB(130, 40, 180), function()
 end)
 
 CreateBtn("6. Spam Bising", Color3.fromRGB(200, 100, 0), function()
-    pcall(function() loadstring(game:HttpGet("https://github.com/faraayra135-oss/ICAL-script/blob/main/Teror%20Audio%20Ical%2018+"))() end)
+    pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/faraayra135-oss/ICAL-script/refs/heads/main/Teror%20Audio%20Ical%2018%2B"))() end)
 end)
 
 game:GetService("StarterGui"):SetCore("SendNotification", {
