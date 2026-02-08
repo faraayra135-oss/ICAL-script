@@ -1,6 +1,6 @@
 --[[
-    ICAL HUB V2 - AUTHENTICATION LOADER
-    Database Whitelist: https://pastebin.com/raw/PHBaMu4J
+    ICAL HUB V2 - PREMIUM AUTH LOADER
+    "Salin dulu codenya bro!!" Version
 ]]
 
 local WhitelistURL = "https://pastebin.com/raw/PHBaMu4J"
@@ -8,104 +8,128 @@ local MainScriptURL = "https://raw.githubusercontent.com/faraayra135-oss/ICAL-sc
 
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
-local LocalPlayer = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
 
--- 1. FUNGSI MENDAPATKAN HWID
+-- 1. FUNGSI AMBIL HWID
 local function GetHWID()
     local id = (gethwid and gethwid()) or (get_hwid and get_hwid()) or game:GetService("RbxAnalyticsService"):GetClientId()
-    return string.gsub(id, "%s+", "") -- Menghapus spasi jika ada
+    return string.gsub(id, "%s+", "")
 end
 
 local userHWID = GetHWID()
 
--- 2. TAMPILAN LOADING / AUTHENTICATION
-if CoreGui:FindFirstChild("ICAL_Auth_System") then CoreGui.ICAL_Auth_System:Destroy() end
-local AuthGui = Instance.new("ScreenGui", CoreGui)
-AuthGui.Name = "ICAL_Auth_System"
+-- 2. SETUP GUI
+if CoreGui:FindFirstChild("ICAL_PremiumAuth") then CoreGui.ICAL_PremiumAuth:Destroy() end
+local Screen = Instance.new("ScreenGui", CoreGui)
+Screen.Name = "ICAL_PremiumAuth"
 
-local Bg = Instance.new("Frame", AuthGui)
-Bg.Size = UDim2.new(1, 0, 1, 0)
-Bg.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-Bg.ZIndex = 10000
+-- Background Utama
+local Main = Instance.new("Frame", Screen)
+Main.Size = UDim2.new(1, 0, 1, 0)
+Main.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+Main.ZIndex = 10000
 
-local Status = Instance.new("TextLabel", Bg)
-Status.Size = UDim2.new(1, 0, 0.4, 0)
-Status.Position = UDim2.new(0, 0, 0.2, 0)
+-- Panel Tengah (Pop-up Feel)
+local Panel = Instance.new("Frame", Main)
+Panel.Size = UDim2.new(0, 300, 0, 220)
+Panel.Position = UDim2.new(0.5, -150, 0.4, -110)
+Panel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Instance.new("UICorner", Panel).CornerRadius = UDim.new(0, 15)
+local Stroke = Instance.new("UIStroke", Panel)
+Stroke.Color = Color3.fromRGB(0, 150, 255)
+Stroke.Thickness = 2
+
+-- Judul Atas
+local Title = Instance.new("TextLabel", Panel)
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.GothamBold
+Title.Text = "ICAL HUB V2 ACCESS"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 16
+
+-- Status & Pesan Khusus
+local Status = Instance.new("TextLabel", Panel)
+Status.Size = UDim2.new(1, 0, 0, 30)
+Status.Position = UDim2.new(0, 0, 0.25, 0)
 Status.BackgroundTransparency = 1
 Status.Font = Enum.Font.GothamBold
 Status.Text = "MEMERIKSA AKSES..."
 Status.TextColor3 = Color3.fromRGB(255, 255, 255)
-Status.TextSize = 22
+Status.TextSize = 14
 
--- 3. PROSES PENGECEKAN KE PASTEBIN
+-- 3. LOGIKA PENGECEKAN
 local success, database = pcall(function()
     return game:HttpGet(WhitelistURL)
 end)
 
+task.wait(1) -- Delay biar keren
+
 if success then
-    -- Membersihkan database dari spasi tambahan agar pengecekan akurat
-    local cleanDatabase = string.gsub(database, "%s+", " ")
+    local cleanDB = string.gsub(database, "%s+", " ")
 
-    if string.find(cleanDatabase, userHWID) then
-        -- === AKSES DITERIMA ===
-        Status.Text = "AKSES DITERIMA!\nSELAMAT DATANG ICAL"
-        Status.TextColor3 = Color3.fromRGB(0, 255, 120)
-        task.wait(1.5)
-        AuthGui:Destroy()
-
-        -- JALANKAN SCRIPT UTAMA
+    if string.find(cleanDB, userHWID) then
+        -- SUKSES
+        Status.Text = "AKSES DITERIMA!"
+        Status.TextColor3 = Color3.fromRGB(0, 255, 100)
+        Stroke.Color = Color3.fromRGB(0, 255, 100)
+        task.wait(1)
+        Screen:Destroy()
         loadstring(game:HttpGet(MainScriptURL))()
     else
-        -- === AKSES DITOLAK (Munculkan Tombol Claim/Copy) ===
-        Status.Text = "AKSES DITOLAK!\nHWID TIDAK TERDAFTAR"
+        -- GAGAL (Tampilkan Menu Menarik)
+        Status.Text = "AKSES DITOLAK!"
         Status.TextColor3 = Color3.fromRGB(255, 50, 50)
+        Stroke.Color = Color3.fromRGB(255, 50, 50)
 
-        -- Tampilan Box HWID
-        local HWIDBox = Instance.new("TextBox", Bg)
-        HWIDBox.Size = UDim2.new(0.7, 0, 0.08, 0)
-        HWIDBox.Position = UDim2.new(0.15, 0, 0.55, 0)
-        HWIDBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        HWIDBox.TextColor3 = Color3.fromRGB(255, 255, 0)
-        HWIDBox.Text = userHWID
-        HWIDBox.Font = Enum.Font.Code
-        HWIDBox.TextSize = 14
-        HWIDBox.ReadOnly = true
-        Instance.new("UICorner", HWIDBox)
+        -- Tulisan yang kamu minta
+        local BroMsg = Instance.new("TextLabel", Panel)
+        BroMsg.Size = UDim2.new(1, 0, 0, 20)
+        BroMsg.Position = UDim2.new(0, 0, 0.4, 0)
+        BroMsg.BackgroundTransparency = 1
+        BroMsg.Font = Enum.Font.GothamBold
+        BroMsg.Text = "Salin dulu codenya bro!!"
+        BroMsg.TextColor3 = Color3.fromRGB(255, 255, 0) -- Kuning biar kebaca
+        BroMsg.TextSize = 18
 
-        -- Tombol Claim (Copy HWID)
-        local ClaimBtn = Instance.new("TextButton", Bg)
-        ClaimBtn.Name = "ClaimBtn"
-        ClaimBtn.Size = UDim2.new(0.5, 0, 0.08, 0)
-        ClaimBtn.Position = UDim2.new(0.25, 0, 0.65, 0)
-        ClaimBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-        ClaimBtn.Font = Enum.Font.GothamBold
-        ClaimBtn.Text = "CLAIM KODE (COPY)"
-        ClaimBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        ClaimBtn.TextSize = 14
-        Instance.new("UICorner", ClaimBtn)
+        -- Box HWID
+        local Box = Instance.new("TextBox", Panel)
+        Box.Size = UDim2.new(0.8, 0, 0, 35)
+        Box.Position = UDim2.new(0.1, 0, 0.55, 0)
+        Box.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+        Box.TextColor3 = Color3.fromRGB(200, 200, 200)
+        Box.Text = userHWID
+        Box.ClearTextOnFocus = false
+        Box.ReadOnly = true
+        Box.Font = Enum.Font.Code
+        Box.TextSize = 12
+        Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 8)
 
-        ClaimBtn.MouseButton1Click:Connect(function()
+        -- Tombol Salin (Copy)
+        local CopyBtn = Instance.new("TextButton", Panel)
+        CopyBtn.Size = UDim2.new(0.8, 0, 0, 40)
+        CopyBtn.Position = UDim2.new(0.1, 0, 0.75, 0)
+        CopyBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+        CopyBtn.Font = Enum.Font.GothamBold
+        CopyBtn.Text = "SALIN HWID (COPY)"
+        CopyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        CopyBtn.TextSize = 14
+        Instance.new("UICorner", CopyBtn).CornerRadius = UDim.new(0, 8)
+
+        CopyBtn.MouseButton1Click:Connect(function()
             if setclipboard then
                 setclipboard(userHWID)
-                ClaimBtn.Text = "BERHASIL DISALIN!"
-                ClaimBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+                CopyBtn.Text = "SUKSES DISALIN!"
+                CopyBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
                 task.wait(2)
-                ClaimBtn.Text = "CLAIM KODE (COPY)"
-                ClaimBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+                CopyBtn.Text = "SALIN HWID (COPY)"
+                CopyBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
             else
-                ClaimBtn.Text = "ERROR: TIDAK BISA SALIN"
+                CopyBtn.Text = "Gagal Salin (Manual)"
             end
         end)
-
-        local Info = Instance.new("TextLabel", Bg)
-        Info.Size = UDim2.new(1, 0, 0.1, 0)
-        Info.Position = UDim2.new(0, 0, 0.75, 0)
-        Info.BackgroundTransparency = 1
-        Info.Text = "Salin kode di atas dan kirim ke Owner untuk akses."
-        Info.TextColor3 = Color3.fromRGB(150, 150, 150)
-        Info.TextSize = 12
     end
 else
-    Status.Text = "ERROR: GAGAL MENGHUBUNGI SERVER.\nCek Koneksi Internet."
+    Status.Text = "SERVER DATABASE OFFLINE"
     Status.TextColor3 = Color3.fromRGB(255, 150, 0)
 end
