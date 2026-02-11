@@ -1,0 +1,52 @@
+-- [[ 🔫 ACS GOD GUN V3: WALLBANG & RAPID FIRE ]]
+local Player = game.Players.LocalPlayer
+local Backpack = Player:WaitForChild("Backpack")
+
+print("🔥 Mengaktifkan Mode Terminator pada senjata...")
+
+local successCount = 0
+
+for _, tool in pairs(Backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        local module = tool:FindFirstChild("ACS_Modulo") or tool:FindFirstChild("ACS_Settings") or tool:FindFirstChild("Settings")
+        
+        if module and module:IsA("ModuleScript") then
+            local success, GunStats = pcall(function() return require(module) end)
+            
+            if success and type(GunStats) == "table" then
+                -- [1] Mempertahankan fitur V2 (Laser Aim)
+                GunStats.camRecoil = {RecoilUp = 0, RecoilTilt = 0, RecoilLeft = 0, RecoilRight = 0}
+                GunStats.gunRecoil = {RecoilUp = 0, RecoilTilt = 0, RecoilLeft = 0, RecoilRight = 0}
+                GunStats.MinSpread = 0
+                GunStats.MaxSpread = 0
+                
+                -- [2] 🔥 WALLBANG (TEMBUS TEMBOK)
+                -- ACS menghitung daya tembus. Kita buat angkanya tidak masuk akal.
+                GunStats.Penetration = 9999 
+                GunStats.MaxPenetration = 9999
+                
+                -- [3] 🔥 RAPID FIRE (KECEPATAN DEWA)
+                -- RPM (Rounds Per Minute). Semakin tinggi, semakin cepat peluru keluar.
+                GunStats.FireRate = 2500 
+                -- Memaksa senjata yang tadinya hanya bisa 1 tembakan (Semi) menjadi Full-Auto
+                GunStats.FireModes = {Auto = true, Semi = true, Burst = true} 
+                GunStats.Mode = "Auto"
+                
+                -- [4] 🔥 INSTANT RELOAD & INFINITE AMMO
+                GunStats.Ammo = 999
+                GunStats.StoredAmmo = 99999
+                GunStats.ReloadTime = 0.05 -- Waktu reload nyaris 0 detik
+                GunStats.EquipTime = 0.05 -- Mengeluarkan senjata instan tanpa animasi lama
+                
+                print("✅ Senjata [" .. tool.Name .. "] berhasil di-Upgrade ke V3!")
+                successCount = successCount + 1
+            end
+        end
+    end
+end
+
+if successCount > 0 then
+    print("🎉 Upgrade Selesai! Keluarkan senjatamu dan coba tembak musuh dari balik tembok tebal.")
+else
+    warn("❌ Modul ACS tidak ditemukan. Pastikan senjata TIDAK DIPEGANG saat menjalankan skrip!")
+end
