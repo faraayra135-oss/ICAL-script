@@ -1,0 +1,19 @@
+--[[
+    KICK ALL SCRIPT
+    Target: Semua orang di server kecuali LocalPlayer
+]]
+
+local Players = game:GetService("Players")
+local KickEvent = game:GetService("ReplicatedStorage"):WaitForChild("KickPlayerEvent")
+local LocalPlayer = Players.LocalPlayer
+
+for _, targetPlayer in pairs(Players:GetPlayers()) do
+    -- Cek agar tidak menendang diri sendiri
+    if targetPlayer ~= LocalPlayer then
+        local args = {
+            [1] = targetPlayer
+        }
+        KickEvent:FireServer(unpack(args))
+        print("Mencoba menendang: " .. targetPlayer.Name)
+    end
+end
