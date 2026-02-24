@@ -1,0 +1,163 @@
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "WordHackerLethalQX"
+ScreenGui.ResetOnSpawn = false
+pcall(function() ScreenGui.Parent = game:GetService("CoreGui") end)
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 220, 0, 110)
+MainFrame.Position = UDim2.new(0.5, 120, 0.5, -55)
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+MainFrame.BorderSizePixel = 2
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local MinimizeBtn = Instance.new("TextButton")
+MinimizeBtn.Size = UDim2.new(0, 25, 0, 25)
+MinimizeBtn.Position = UDim2.new(1, -25, 0, 0)
+MinimizeBtn.Text = "-"
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+MinimizeBtn.TextColor3 = Color3.new(1, 1, 1)
+MinimizeBtn.Parent = MainFrame
+
+local InputBox = Instance.new("TextBox")
+InputBox.Size = UDim2.new(0.9, 0, 0, 35)
+InputBox.Position = UDim2.new(0.05, 0, 0.1, 0)
+InputBox.PlaceholderText = "Huruf di layar..."
+InputBox.Text = ""
+InputBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+InputBox.TextColor3 = Color3.new(1, 1, 1)
+InputBox.Parent = MainFrame
+
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(1, 0, 0, 25)
+StatusLabel.Position = UDim2.new(0, 0, 0.45, 0)
+StatusLabel.Text = "Target: Q & X"
+StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.TextScaled = true
+StatusLabel.Parent = MainFrame
+
+local ResetBtn = Instance.new("TextButton")
+ResetBtn.Size = UDim2.new(0.9, 0, 0, 25)
+ResetBtn.Position = UDim2.new(0.05, 0, 0.7, 0)
+ResetBtn.Text = "RESET MEMORY (0)"
+ResetBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+ResetBtn.TextColor3 = Color3.new(1, 1, 1)
+ResetBtn.Parent = MainFrame
+
+--- SISTEM DATA & GLOBAL MEMORY ---
+local WordList = {}
+_G.kataSudahDipakai = {} 
+local RS = game:GetService("ReplicatedStorage")
+local Remotes = RS:WaitForChild("Remotes")
+local SubmitRemote = Remotes:WaitForChild("SubmitWord")
+local BillboardRemote = Remotes:WaitForChild("BillboardUpdate")
+local TypeSoundRemote = Remotes:WaitForChild("TypeSound")
+
+task.spawn(function()
+    local WLFolder = RS:WaitForChild("WordList")
+    WordList = require(WLFolder:WaitForChild("IndonesianWords"))
+end)
+
+-- SISTEM RAINBOW
+local isTyping = false
+task.spawn(function()
+    while true do
+        if isTyping then
+            for i = 0, 1, 0.01 do
+                if not isTyping then break end
+                StatusLabel.TextColor3 = Color3.fromHSV(i, 1, 1)
+                task.wait(0.02)
+            end
+        else
+            StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            task.wait(0.5)
+        end
+    end
+end)
+
+local function updateResetText()
+    local count = 0
+    for _ in pairs(_G.kataSudahDipakai) do count = count + 1 end
+    ResetBtn.Text = "RESET MEMORY (" .. count .. ")"
+end
+
+-- PRIORITAS AKHIRAN MATI
+local function cariKataTerbaik()
+    local prefixInput = string.lower(InputBox.Text)
+    if #prefixInput == 0 or #WordList == 0 then return nil end
+    local hasilCari = {}
+    
+    for _, v in ipairs(WordList) do
+        local w = string.lower(v)
+        if string.sub(w, 1, #prefixInput) == prefixInput and #w > #prefixInput and not _G.kataSudahDipakai[w] then
+            local skor = 0
+            local lastChar = string.sub(w, -1)
+            local lastTwo = string.sub(w, -2)
+            
+            -- BOOST SKOR UNTUK Q DAN X
+            if lastChar == "q" then skor = 600
+            elseif lastChar == "x" then skor = 500
+            elseif lastTwo == "nz" then skor = 150
+            elseif lastTwo == "sy" then skor = 100
+            elseif lastTwo == "kh" then skor = 90
+            end
+            
+            table.insert(hasilCari, {teks = w, poin = skor})
+        end
+    end
+    
+    table.sort(hasilCari, function(a, b) return a.poin > b.poin end)
+    return #hasilCari > 0 and hasilCari[1].teks or nil
+end
+
+local function prosesEkseskusi(target, originalPrefix)
+    isTyping = true
+    StatusLabel.Text = "Mencari Kata..."
+    task.wait(math.random(10, 15) / 10) 
+
+    for i = #originalPrefix + 1, #target do
+        local partial = string.sub(target, 1, i)
+        BillboardRemote:FireServer(partial)
+        TypeSoundRemote:FireServer() 
+        task.wait(math.random(25, 45) / 100) 
+    end
+    
+    task.wait(math.random(5, 9) / 10)
+    SubmitRemote:FireServer(target)
+    
+    _G.kataSudahDipakai[target] = true
+    isTyping = false
+    updateResetText()
+    StatusLabel.Text = "Skakmat: " .. target
+end
+
+-- FIXED RESET BUTTON
+ResetBtn.MouseButton1Click:Connect(function() 
+    _G.kataSudahDipakai = {}
+    updateResetText()
+    StatusLabel.Text = "Memory Direset!"
+    StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
+end)
+
+InputBox.FocusLost:Connect(function(enter)
+    if enter then
+        local pfx = InputBox.Text
+        local target = cariKataTerbaik()
+        if target then
+            InputBox.Text = ""
+            task.spawn(function() prosesEkseskusi(target, pfx) end)
+        else
+            StatusLabel.Text = "Q/X Habis!"
+        end
+    end
+end)
+
+local min = false
+MinimizeBtn.MouseButton1Click:Connect(function()
+    min = not min
+    MainFrame:TweenSize(min and UDim2.new(0, 40, 0, 30) or UDim2.new(0, 220, 0, 110), "Out", "Quad", 0.3, true)
+    InputBox.Visible, StatusLabel.Visible, ResetBtn.Visible = not min, not min, not min
+    MinimizeBtn.Text = min and "+" or "-"
+end)
