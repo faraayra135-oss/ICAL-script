@@ -86,8 +86,6 @@ end
 
 task.spawn(function()
     addWordsFromUrl("https://raw.githubusercontent.com/geovedi/indonesian-wordlist/master/01-kbbi3-2001-sort-alpha.lst")
-    addWordsFromUrl("https://raw.githubusercontent.com/damzaky/kumpulan-kata-bahasa-indonesia-KBBI/master/list_0.5.1.txt")
-    addWordsFromUrl("https://raw.githubusercontent.com/damzaky/kumpulan-kata-bahasa-indonesia-KBBI/master/list_1.0.0.txt")
     StatusLabel.Text = "Siap! Setel Max Huruf"
 end)
 
@@ -143,7 +141,7 @@ local function eksekusi(target, originalPrefix)
         if TypeSound then TypeSound:FireServer() end
         
         -- JEDA NGETIK SLOW (0.25s - 0.45s)
-        task.wait(math.random(17, 37) / 100)
+        task.wait(math.random(10, 30) / 100)
     end
     
     task.wait(math.random(5, 8) / 10) 
