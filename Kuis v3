@@ -93,8 +93,7 @@ local WordCheck = {}
 _G.kataSudahDipakai = {}
 
 local sources = {
-    "https://raw.githubusercontent.com/geovedi/indonesian-wordlist/master/01-kbbi3-2001-sort-alpha.lst",
-    "https://raw.githubusercontent.com/panggi/indonesian-words-list/master/indonesian-words.txt"
+    "https://raw.githubusercontent.com/geovedi/indonesian-wordlist/master/00-indonesian-wordlist.lst",
 }
 
 local function addWordsFromUrl(url)
