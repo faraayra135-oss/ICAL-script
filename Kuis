@@ -1,11 +1,12 @@
+local HttpService = game:GetService("HttpService")
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "WordUltimateV14_Min3"
+ScreenGui.Name = "WordUltimateV14_MegaDB"
 ScreenGui.ResetOnSpawn = false
 pcall(function() ScreenGui.Parent = game:GetService("CoreGui") end)
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 240, 0, 210)
-MainFrame.Position = UDim2.new(0.5, 120, 0.5, -105)
+MainFrame.Size = UDim2.new(0, 240, 0, 230)
+MainFrame.Position = UDim2.new(0.5, 120, 0.5, -115)
 MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
 MainFrame.BorderSizePixel = 2
 MainFrame.Active = true
@@ -29,17 +30,25 @@ InputBox.TextColor3 = Color3.new(1, 1, 1)
 InputBox.Parent = MainFrame
 
 local SuffixBox = Instance.new("TextBox")
-SuffixBox.Size = UDim2.new(0.6, 0, 0, 30)
+SuffixBox.Size = UDim2.new(0.4, 0, 0, 30)
 SuffixBox.Position = UDim2.new(0.05, 0, 0.25, 0)
-SuffixBox.Text = "x, q, f, z, v"
+SuffixBox.Text = "x, q, f"
 SuffixBox.BackgroundColor3 = Color3.fromRGB(60, 20, 20)
 SuffixBox.TextColor3 = Color3.fromRGB(255, 180, 180)
 SuffixBox.ClearTextOnFocus = false
 SuffixBox.Parent = MainFrame
 
+local MinLenBox = Instance.new("TextBox")
+MinLenBox.Size = UDim2.new(0.2, 0, 0, 30)
+MinLenBox.Position = UDim2.new(0.5, 0, 0.25, 0)
+MinLenBox.Text = "3"
+MinLenBox.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
+MinLenBox.TextColor3 = Color3.fromRGB(180, 180, 255)
+MinLenBox.Parent = MainFrame
+
 local MaxLenBox = Instance.new("TextBox")
-MaxLenBox.Size = UDim2.new(0.25, 0, 0, 30)
-MaxLenBox.Position = UDim2.new(0.7, 0, 0.25, 0)
+MaxLenBox.Size = UDim2.new(0.2, 0, 0, 30)
+MaxLenBox.Position = UDim2.new(0.75, 0, 0.25, 0)
 MaxLenBox.Text = "10"
 MaxLenBox.BackgroundColor3 = Color3.fromRGB(20, 40, 20)
 MaxLenBox.TextColor3 = Color3.fromRGB(180, 255, 180)
@@ -73,7 +82,7 @@ MaxSpeedBox.Parent = MainFrame
 local StatusLabel = Instance.new("TextLabel")
 StatusLabel.Size = UDim2.new(1, 0, 0, 25)
 StatusLabel.Position = UDim2.new(0, 0, 0.60, 0)
-StatusLabel.Text = "Memfilter Kata (Min 3)..."
+StatusLabel.Text = "Menunggu..."
 StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.TextScaled = true
@@ -81,114 +90,174 @@ StatusLabel.Parent = MainFrame
 
 local ResetBtn = Instance.new("TextButton")
 ResetBtn.Size = UDim2.new(0, 215, 0, 25)
-ResetBtn.Position = UDim2.new(0.05, 0, 0.82, 0)
+ResetBtn.Position = UDim2.new(0.05, 0, 0.85, 0)
 ResetBtn.Text = "RESET MEMORY (0)"
 ResetBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 ResetBtn.TextColor3 = Color3.new(1, 1, 1)
 ResetBtn.Parent = MainFrame
 
---- LOGIKA DATABASE DENGAN FILTER MIN 3 HURUF ---
+--- LOGIKA DATABASE ---
 local WordList = {}
 local WordCheck = {}
 _G.kataSudahDipakai = {}
 
-local sources = {
-    "https://raw.githubusercontent.com/geovedi/indonesian-wordlist/master/00-indonesian-wordlist.lst",
+local customWords = {
+    "eh", "ehe", "ehen", "ehm", "ehsan", "ehwal", "ehram", "ehsas", "ehteram",
+    "ksatria", "ksatriawan", "ksatriawati", "kshatriya", "ksilem", "ksilan", "ksilosa", 
+    "ksilol", "ksilofon", "ksilograf", "ksilografi", "ksenon", "ksenofobia", 
+    "ksenomania", "ksenoglosia", "ksenokrasi", "ksenograf", "ksenomorf", 
+    "ksenotermal", "ksenogami", "ksenoblast", "kster", "buraq", "nasdaq", 
+    "iraq", "faruq", "khaliq", "razaq", "mantiq", "infaq", "siddiq", "ishaq", 
+    "fariq", "thariq", "tariq", "mutlaq", "syauq", "istisq", "muhaq"
 }
 
-local function addWordsFromUrl(url)
-    local success, result = pcall(function() return game:HttpGet(url) end)
-    if success and result then
-        local added = 0
-        for word in result:gmatch("[^\r\n]+") do
-            local clean = word:match("^%s*(.-)%s*$"):lower()
-            -- FILTER: Minimal 3 Huruf, Tanpa Spasi, Tanpa Simbol
-            if #clean >= 3 and not clean:find("%s") and not clean:find("[^%a]") and not WordCheck[clean] then
+-- Loader untuk Custom dan Teks Biasa
+local function loadGeneric(name, url_or_table)
+    StatusLabel.Text = "Loading: " .. name
+    local content
+    if type(url_or_table) == "table" then
+        content = url_or_table
+    else
+        local ok, res = pcall(function() return game:HttpGet(url_or_table) end)
+        if ok then content = res else warn("Gagal load " .. name) return end
+    end
+
+    if type(content) == "string" then
+        for word in content:gmatch("[^\r\n]+") do
+            local clean = word:match("^%s*(.-)%s*$"):lower():gsub("[^%a]", "")
+            if #clean >= 2 and not WordCheck[clean] then
                 table.insert(WordList, clean)
                 WordCheck[clean] = true
-                added = added + 1
+            end
+        end
+    else
+        for _, word in ipairs(content) do
+            local clean = word:lower():gsub("[^%a]", "")
+            if #clean >= 2 and not WordCheck[clean] then
+                table.insert(WordList, clean)
+                WordCheck[clean] = true
+            end
+        end
+    end
+end
+
+-- Loader khusus JSON
+local function loadJSON(url)
+    StatusLabel.Text = "Loading: JSON KBBI"
+    local ok, res = pcall(function() return game:HttpGet(url) end)
+    if ok then
+        local data = HttpService:JSONDecode(res)
+        for _, entry in pairs(data) do
+            local wordStr = type(entry) == "table" and entry.kata or tostring(entry)
+            local clean = wordStr:lower():gsub("[^%a]", "")
+            if #clean >= 3 and not WordCheck[clean] then
+                table.insert(WordList, clean)
+                WordCheck[clean] = true
             end
         end
     end
 end
 
 task.spawn(function()
-    for _, src in ipairs(sources) do
-        addWordsFromUrl(src)
-        StatusLabel.Text = "Database: " .. #WordList .. " Kata"
-        task.wait(0.1)
+    -- 1. Custom Words
+    loadGeneric("Custom", customWords)
+    
+    -- 2. Master List Geovedi (78k)
+    loadGeneric("Geovedi Master", "https://raw.githubusercontent.com/geovedi/indonesian-wordlist/master/00-indonesian-wordlist.lst")
+    
+    -- 3. JSON KBBI
+    loadJSON("https://raw.githubusercontent.com/lufias69/KBBI2/refs/heads/master/cek_KBBI/dataKBBI.json")
+    
+    -- 4. Bekicot A-Z
+    local alpha = "abcdefghijklmnopqrstuvwxyz"
+    for i = 1, #alpha do
+        local c = alpha:sub(i,i)
+        loadGeneric("Bekicot "..c:upper(), "https://raw.githubusercontent.com/bekicot/indonesian_words/refs/heads/master/words/"..c)
+        if i % 5 == 0 then task.wait(0.1) end
     end
-    StatusLabel.Text = "Ready (Minimal 3 Huruf)"
+    
+    StatusLabel.Text = "READY: " .. #WordList .. " KATA"
 end)
 
-local function eksekusi(target, originalPrefix)
-    local minSpd = tonumber(MinSpeedBox.Text) or 13
-    local maxSpd = tonumber(MaxSpeedBox.Text) or 25
-    
-    StatusLabel.Text = "Ketik: " .. target:upper()
-    task.wait(math.random(3, 5) / 10)
-
-    -- Hanya melakukan jeda waktu (simulasi ketik) tanpa mengirim remote apapun
-    for i = #originalPrefix + 1, #target do
-        task.wait(math.random(minSpd, maxSpd) / 100)
-    end
-    
-    task.wait(math.random(4, 7) / 10)
-    
-    -- Tetap catat memori kata yang sudah diproses agar tidak direkomendasikan ulang
-    _G.kataSudahDipakai[target] = true
-    local count = 0; for _ in pairs(_G.kataSudahDipakai) do count = count + 1 end
-    ResetBtn.Text = "RESET MEMORY (" .. count .. ")"
-    StatusLabel.Text = "Selesai Ketik: " .. target:upper()
-end
-
 local function cariKataCrusher()
-    local prefix = string.lower(InputBox.Text)
+    local prefix = string.match(string.lower(InputBox.Text), "^%s*(.-)%s*$")
     local rawSuffix = string.lower(SuffixBox.Text)
-    local maxAllowed = tonumber(MaxLenBox.Text) or 10
-    if #prefix == 0 or #WordList == 0 then return nil end
+    local minLen = tonumber(MinLenBox.Text) or 3
+    local maxLen = tonumber(MaxLenBox.Text) or 10
+    
+    if not prefix or #prefix == 0 or #WordList == 0 then return nil end
     local targets = {}
     for s in rawSuffix:gmatch("([^,%s]+)") do table.insert(targets, s) end
-    local hasilCari = {}
+    
+    local hasil = {}
     for _, w in ipairs(WordList) do
-        if string.sub(w, 1, #prefix) == prefix and not _G.kataSudahDipakai[w] then
-            local skor = 0
-            local isUnderLimit = (#w <= maxAllowed)
-            local limitBonus = isUnderLimit and 2000 or 0
-            for i, target in ipairs(targets) do
-                if string.sub(w, -#target) == target then
-                    skor = 100000 + limitBonus - i 
-                    break
+        if w:sub(1, #prefix) == prefix and not _G.kataSudahDipakai[w] then
+            if #w >= minLen and #w <= maxLen then
+                local score = 0
+                local isSpecial = false
+                
+                for i, target in ipairs(targets) do
+                    if w:sub(-#target) == target then
+                        -- SKOR SUPER PRIORITAS
+                        score = 1000000 - (i * 1000) + (100 - #w)
+                        isSpecial = true
+                        break
+                    end
                 end
+                
+                if not isSpecial then
+                    score = (100 - #w) -- Prioritas kata pendek untuk kata biasa
+                end
+                
+                table.insert(hasil, {t = w, p = score})
             end
-            if skor == 0 then skor = limitBonus + #w end
-            table.insert(hasilCari, {teks = w, poin = skor})
         end
     end
-    table.sort(hasilCari, function(a, b) return a.poin > b.poin end)
-    return #hasilCari > 0 and hasilCari[1].teks or nil
+    
+    table.sort(hasil, function(a, b) return a.p > b.p end)
+    return #hasil > 0 and hasil[1].t or nil
+end
+
+local function eksekusi(target, pfx)
+    local minS = tonumber(MinSpeedBox.Text) or 13
+    local maxS = tonumber(MaxSpeedBox.Text) or 25
+    StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
+    StatusLabel.Text = "HASIL: " .. target:upper()
+    
+    for i = #pfx + 1, #target do
+        task.wait(math.random(minS, maxS) / 100)
+    end
+    
+    _G.kataSudahDipakai[target] = true
+    local c = 0; for _ in pairs(_G.kataSudahDipakai) do c = c + 1 end
+    ResetBtn.Text = "RESET MEMORY (" .. c .. ")"
 end
 
 InputBox.FocusLost:Connect(function(enter)
     if enter then
-        local pfx = InputBox.Text
-        local target = cariKataCrusher()
-        if target then
+        local p = string.match(InputBox.Text, "^%s*(.-)%s*$") or InputBox.Text
+        local res = cariKataCrusher()
+        if res then
             InputBox.Text = ""
-            task.spawn(function() eksekusi(target, pfx) end)
+            task.spawn(function() eksekusi(res, p) end)
         else
-            StatusLabel.Text = "Kata 3+ Huruf Tidak Ada!"
+            StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+            StatusLabel.Text = "TIDAK ADA KATA!"
         end
     end
 end)
 
 ResetBtn.MouseButton1Click:Connect(function() 
-    _G.kataSudahDipakai = {}; ResetBtn.Text = "RESET MEMORY (0)"
+    _G.kataSudahDipakai = {}
+    ResetBtn.Text = "RESET MEMORY (0)"
+    StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    StatusLabel.Text = "READY: " .. #WordList .. " KATA"
 end)
 
 local min = false
 MinimizeBtn.MouseButton1Click:Connect(function()
     min = not min
-    MainFrame:TweenSize(min and UDim2.new(0, 40, 0, 30) or UDim2.new(0, 240, 0, 210), "Out", "Quad", 0.3, true)
-    InputBox.Visible, SuffixBox.Visible, MaxLenBox.Visible, SpeedLabel.Visible, MinSpeedBox.Visible, MaxSpeedBox.Visible, StatusLabel.Visible, ResetBtn.Visible = not min, not min, not min, not min, not min, not min, not min, not min
+    MainFrame:TweenSize(min and UDim2.new(0, 40, 0, 30) or UDim2.new(0, 240, 0, 230), "Out", "Quad", 0.3, true)
+    local v = not min
+    InputBox.Visible, SuffixBox.Visible, MinLenBox.Visible, MaxLenBox.Visible, SpeedLabel.Visible, MinSpeedBox.Visible, MaxSpeedBox.Visible, StatusLabel.Visible, ResetBtn.Visible = v,v,v,v,v,v,v,v,v
 end)
